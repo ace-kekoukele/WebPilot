@@ -9,14 +9,15 @@ import { EventEmitter } from 'node:events';
 import { mkdirSync, existsSync, appendFileSync, readFileSync, readdirSync, statSync, unlinkSync } from 'node:fs';
 import path from 'node:path';
 import { getConfigDir } from './config.js';
+import { RingBuffer } from './ring-buffer.js';
 
 const MAX_INMEM = 10_000;
 
 class ActivityLog extends EventEmitter {
   constructor() {
     super();
-    /** @type {Array<{ts, agent, agentColor, tool, args, ok, error, durationMs, targetId}>} */
-    this._buffer = [];
+    /** @type {RingBuffer} */
+    this._buffer = new RingBuffer(MAX_INMEM);  // O(1) 环形缓冲区
     this._todayFile = this._dateFile(new Date());
     this._ensureDir();
     // 启动时回放当天文件 (限制 5000 条)
@@ -59,7 +60,6 @@ class ActivityLog extends EventEmitter {
       targetId: event.targetId || null,
     };
     this._buffer.push(entry);
-    if (this._buffer.length > MAX_INMEM) this._buffer.shift();
 
     // 切日时滚动
     const today = this._dateFile(new Date());
@@ -78,13 +78,12 @@ class ActivityLog extends EventEmitter {
   }
 
   query({ agent, tool, ok, since, until, limit = 200 } = {}) {
-    let out = this._buffer;
+    let out = this._buffer.toArray().reverse();  // 新的在前
     if (agent) out = out.filter((e) => e.agent === agent);
     if (tool) out = out.filter((e) => e.tool === tool);
     if (typeof ok === 'boolean') out = out.filter((e) => e.ok === ok);
     if (since) out = out.filter((e) => e.ts >= since);
     if (until) out = out.filter((e) => e.ts <= until);
-    out = [...out].reverse();   // 新的在前
     return out.slice(0, limit);
   }
 
@@ -104,7 +103,7 @@ class ActivityLog extends EventEmitter {
   }
 
   size() { return this._buffer.length; }
-  clear() { this._buffer.length = 0; }
+  clear() { this._buffer.clear(); }
 }
 
 let _singleton = null;

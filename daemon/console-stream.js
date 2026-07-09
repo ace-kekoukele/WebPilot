@@ -1,9 +1,10 @@
 // daemon/console-stream.js — Console 事件持久化 + SSE 推送
 // 监听 Runtime.consoleAPICalled + Log.entryAdded, ring buffer 1000 条, 客户端可 SSE 订阅
 import { on, listTargets } from '../lib/cdp/index.js';
+import { RingBuffer } from './ring-buffer.js';
 
 const RING_SIZE = 1000;
-const buffer = [];          // FIFO ring
+const buffer = new RingBuffer(RING_SIZE);  // O(1) 环形缓冲区
 const subscribers = new Set();  // SSE clients
 
 let started = false;
@@ -11,8 +12,8 @@ let offConsole = null;
 let offLog = null;
 
 function push(entry) {
-  buffer.push({ ts: Date.now(), ...entry });
-  if (buffer.length > RING_SIZE) buffer.shift();
+  const wrapped = { ts: Date.now(), ...entry };
+  buffer.push(wrapped);
   // 推给所有 SSE 订阅者
   const line = `data: ${JSON.stringify(entry)}\n\n`;
   for (const res of subscribers) {
@@ -21,13 +22,13 @@ function push(entry) {
 }
 
 export function getBuffer() {
-  return buffer.slice();
+  return buffer.toArray();
 }
 
 export function addSubscriber(res) {
   subscribers.add(res);
-  // 立即推最近 50 条给新订阅者, 衔接
-  for (const e of buffer.slice(-50)) {
+  // 立即推最近 50 条给新订阅者，衔接
+  for (const e of buffer.recent(50)) {
     try { res.write(`data: ${JSON.stringify(e)}\n\n`); } catch {}
   }
 }

@@ -14,17 +14,18 @@ import { mkdirSync, existsSync, writeFileSync, readFileSync, readdirSync, unlink
 import path from 'node:path';
 import { getConfigDir } from './config.js';
 import { on as transportOn } from '../lib/cdp/transport.js';
+import { RingBuffer } from './ring-buffer.js';
 
 const MAX_INMEM = 5000;
 
 class NetworkStore extends EventEmitter {
   constructor() {
     super();
-    /** @type {Array<NetworkEvent>} */
-    this._events = [];
-    /** @type {Map<string, NetworkEvent>} by requestId */
+    /** @type {RingBuffer} */
+    this._events = new RingBuffer(MAX_INMEM);  // O(1) 环形缓冲区
+    /** @type {Map<string, object>} by requestId */
     this._byReqId = new Map();
-    /** @type {Map<string, NetworkEvent>} by tabId */
+    /** @type {Map<string, object>} by tabId */
     this._byTabId = new Map();
     this._sessionId = new Date().toISOString().slice(0, 10);
     this._wireCdp();
@@ -113,7 +114,6 @@ class NetworkStore extends EventEmitter {
 
   _add(ev) {
     this._events.push(ev);
-    if (this._events.length > MAX_INMEM) this._events.shift();
     // 按 requestId 合并
     if (ev.requestId) {
       const prev = this._byReqId.get(ev.requestId) || {};
@@ -131,7 +131,7 @@ class NetworkStore extends EventEmitter {
   query({ tabId, method, urlPattern, status, hasBody, since, until, limit = 200 } = {}) {
     // 用 Map 保证每个 requestId 只输出最新合并状态
     const merged = new Map();
-    for (const e of this._events) {
+    for (const e of this._events.toArray()) {
       if (tabId && e.tabId !== tabId) continue;
       if (e.requestId) {
         const prev = merged.get(e.requestId) || {};
@@ -189,7 +189,6 @@ class NetworkStore extends EventEmitter {
   }
 
   size() { return this._events.length; }
-  uniqueCount() { return this._byReqId.size; }
 }
 
 let _singleton = null;
