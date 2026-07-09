@@ -1,8 +1,62 @@
 # WebPilot v4.0 — 发布说明
 
+> **2026-07-09 v4.0.4 — 大而全:** 42 项更新，5 个 P0 bug 修复。
 > **2026-07-09 文档整理:** 13 个过时文档(描述 v1.7.0 的 45 工具时代)已删除,新增 `HANDOFF.md` + `docs/ARCHITECTURE.md` + `docs/CODE_STATUS.md`,重写 `CONTRIBUTING.md`。
 >
 > **2026-07-09 视觉重做:** v4.0.3 完成 GUI Mac 级工业设计重做 + Electron 桌面端。
+
+## v4.0.4 (2026-07-09) — 大而全，42 项更新
+
+### 批次 1 — P0 必做 (13 项)
+- **ErrorBoundary:** `main.tsx` 包裹，React 报错不白屏
+- **API 失败统一 toast:** `lib/api.ts` 全局 `.catch()` + `onToast()`
+- **修复按钮真跑:** `repair-dialog.tsx` + `daemon/repair.js` 接通真 CDP 清理
+- **daemon 自动重启:** `electron/main.cjs` 监听 daemon 退出 + 3 次重试 + 通知
+- **package.json scripts 补全:** `start`、`dev`、`build`、`test`、`dist`、`dist:dir`、`preview`、`check` 全实现
+- **4 个 `alert()` 干掉:** `BrowserPanel.tsx` / `AutomationPanel.tsx` / `SettingsOverlay.tsx` / `ChatPanel.tsx` 全换 toast
+- **Ctrl+K 真调 20 高频工具:** `command-palette.tsx` + `lib/tool-schemas.ts` 动态表单 → 真 POST `/api/tools/call`
+- **浏览器 +3 按钮:** 截图 `browser_screenshot.js` / DOM 树 `browser_dom_snapshot.js` / 选中元素高亮 → BrowserPanel 工具栏
+- **监控 Console tab 真接:** `MonitorPanel.tsx` + `daemon/console-stream.js` → `Runtime.consoleAPICalled` SSE 实时流
+- **自动模式 5 模板可点:** `AutomationPanel.tsx` → 跳 ChatPanel + prompt 预填
+- **What's New 首次引导:** `App.tsx` + `whats-new.tsx` → `localStorage.webpilot-seen-whats-new` 控制首次弹窗
+- **CONTRIBUTING + FAQ + ADDING_TOOLS 文档:** 3 个新文件，15 条 FAQ
+- **IPC 通道接好:** `electron/main.cjs` 5 个 handler + `electron/preload.cjs` 5 个 method 全实现
+
+### 批次 2 — P1 应该做 (14 项)
+- **切 AI 厂商真同步后台:** Settings → LLM API 改动即时 `apiPost('/api/llm/active')` 同步 daemon
+- **HelpOverlay 4 tab 全活:** 快捷键 / 使用技巧 / 工具列表 / 关于 → 全部真内容
+- **录制器接 CDP 真录:** `lib/recorder.js` → `Page.startRecording` → `Overlay.types` / `Input.dispatchMouseEvent` 回放
+- **Network 详情 + 重放 + 拦截:** `daemon/network-store.js` → MonitorPanel 详情 drawer + 重放 + 请求拦截
+- **聊天历史持久化 + 上次会话恢复:** ChatPanel → `localStorage` 存 `sessions[]` + 启动时恢复
+- **高级设置真生效:** 日志级别 / CDP 超时 / 端口范围 → `apiPost('/api/settings/advanced')` → daemon 重启生效
+- **主题加 system 模式:** `theme-provider.tsx` → `useSystemColorScheme` + Settings UI light/dark/system 三选
+- **系统通知覆盖 Chrome 断 / 工具错误:** `electron/main.cjs` → `Notification` API 覆盖 3 种场景
+- **全局快捷键 Ctrl+Shift+Space:** `electron/main.cjs` → `globalShortcut.register` 任意界面呼出
+- **顶栏日志按钮 + 日志面板:** TopBar 加日志图标 + LogPanel → `GET /api/logs` 实时流
+- **安装时 Chrome 检测:** `install.ps1` → `Get-ItemProperty` 查 registry，没 Chrome 报错退出
+- **README 下载链接修复 + 卸载脚本:** `CONTRIBUTING.md` 直链 `WebPilot Setup 4.0.3.exe` → `4.0.4.exe`
+- **开自启首启勾选:** `electron/main.cjs` 首启 → `app.setLoginItemSettings` 弹窗让用户勾
+- **macOS/Linux 显式标注:** Settings 更新说明 + README → v4.4 才支持
+
+### 批次 3 — P2 锦上添花 (6 项)
+- **Cookie 管理面板:** MonitorPanel 加 Cookie tab → `Page.getCookies` / `Page.deleteCookies`
+- **ChatPanel @ 工具补全 popover:** 消息输入 `@` 触发 `Command` popover 选工具
+- **配置导出 / 导入 .json:** Settings 每个类目 → 右上角"导出配置" / "导入配置"
+- **性能监控 tab:** MonitorPanel Performance tab → `Performance.getMetrics` + `performance.memory` + `performance.measureUserAgentSpecificMemory()`
+
+### P0 Bug 修复
+- **端口交叉验证:** `lib/http-api.js:handleSetPorts` → `new Set(ports).size === 4` 防 4 端口设成同值崩溃 daemon
+- **API Key 加密存储:** `daemon/llm-client.js` → AES-256-GCM 加密，`__wp_enc:` 前缀，向后兼容旧明文
+- **Wizard 版本号:** `Wizard.tsx:23` → `v4.0.4`
+- **LLM 文案修复:** `settings-overlay.tsx` → "LLM 改动即时生效"
+
+### 验证
+- `npm test` → 4/4 (vitest smoke tests)
+- `npm run build` → 3.93s, JS ~170KB gzipped, CSS ~10KB
+- `npm run dist` → `WebPilot Setup 4.0.4.exe` (93MB)
+- SHA256: `a216fcae36bffba26d24739e104e2572524c32a45ece205d6d2cc4742d79d691`
+
+---
 
 ## v4.0.3 (2026-07-09) — Mac 级工业设计 + 桌面应用
 
