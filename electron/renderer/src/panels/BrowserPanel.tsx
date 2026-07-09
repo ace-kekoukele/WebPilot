@@ -1,6 +1,6 @@
 // src/panels/BrowserPanel.tsx — 浏览器模式 (URL 导航 + 真预览 + tab 列表 + 3 按钮)
-import { useState, useEffect } from 'react';
-import { Globe, Crosshair, ArrowRight, RefreshCw, ImageIcon, User, Bot, Camera, FileCode, ListTree, Cookie, Copy, ExternalLink, type LucideIcon } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Globe, Crosshair, ArrowRight, RefreshCw, ImageIcon, User, Bot, Camera, FileCode, ListTree, Cookie, Copy, ExternalLink, Search, X, Check, type LucideIcon } from 'lucide-react';
 import { apiGet, apiPost } from '../lib/api';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -28,6 +28,8 @@ export function BrowserPanel({ tools }: Props) {
   const [cookiesLoading, setCookiesLoading] = useState(false);
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState<any>(null);
+  const [tabSearch, setTabSearch] = useState('');
+  const [selectedTabs, setSelectedTabs] = useState<Set<string>>(new Set());
   const health = useAppStore((s) => s.health);
   const { copy, copied } = useClipboard();
 
@@ -244,10 +246,18 @@ export function BrowserPanel({ tools }: Props) {
           )}
         </TabsContent>
         <TabsContent value="user" className="flex-1 overflow-y-auto">
-          <TabList loading={loading} tabs={tabs.user} icon={User} label="用户 Tab" empty="Chrome 未连接" />
+          <TabList loading={loading} tabs={tabs.user} icon={User} label="用户 Tab" empty="Chrome 未连接" searchValue={tabSearch} onSearchChange={setTabSearch} selectedTabs={selectedTabs} onToggleSelect={(id) => {
+              const next = new Set(selectedTabs);
+              next.has(id) ? next.delete(id) : next.add(id);
+              setSelectedTabs(next);
+            }} onSelectAll={() => setSelectedTabs(new Set(tabs.user.map(t => t.targetId || t.id)))} onClearSelect={() => setSelectedTabs(new Set())} />
         </TabsContent>
         <TabsContent value="agent" className="flex-1 overflow-y-auto">
-          <TabList loading={loading} tabs={tabs.agent} icon={Bot} label="Agent Tab" empty="Agent 未打开 tab" />
+          <TabList loading={loading} tabs={tabs.agent} icon={Bot} label="Agent Tab" empty="Agent 未打开 tab" searchValue={tabSearch} onSearchChange={setTabSearch} selectedTabs={selectedTabs} onToggleSelect={(id) => {
+              const next = new Set(selectedTabs);
+              next.has(id) ? next.delete(id) : next.add(id);
+              setSelectedTabs(next);
+            }} onSelectAll={() => setSelectedTabs(new Set(tabs.agent.map(t => t.targetId || t.id)))} onClearSelect={() => setSelectedTabs(new Set())} />
         </TabsContent>
         <TabsContent value="dom" className="flex-1 overflow-hidden">
           {domOpen ? (
@@ -312,7 +322,20 @@ export function BrowserPanel({ tools }: Props) {
   );
 }
 
-function TabList({ loading, tabs, icon: Icon, label, empty }: { loading: boolean; tabs: any[]; icon: LucideIcon; label: string; empty: string }) {
+function TabList({ loading, tabs, icon: Icon, label, empty, searchValue, onSearchChange, selectedTabs, onToggleSelect, onSelectAll, onClearSelect }: {
+  loading: boolean; tabs: any[]; icon: LucideIcon; label: string; empty: string;
+  searchValue?: string; onSearchChange?: (v: string) => void;
+  selectedTabs?: Set<string>; onToggleSelect?: (id: string) => void;
+  onSelectAll?: () => void; onClearSelect?: () => void;
+}) {
+  const filteredTabs = useMemo(() => {
+    if (!searchValue) return tabs;
+    const q = searchValue.toLowerCase();
+    return tabs.filter(t => (t.title || '').toLowerCase().includes(q) || (t.url || '').toLowerCase().includes(q));
+  }, [tabs, searchValue]);
+
+  const allSelected = tabs.length > 0 && tabs.every(t => selectedTabs?.has(t.targetId || t.id));
+
   if (loading) {
     return (
       <div className="space-y-2 p-2">
@@ -324,44 +347,101 @@ function TabList({ loading, tabs, icon: Icon, label, empty }: { loading: boolean
     return <EmptyState icon={Icon} title={label} description={empty} className="h-full" />;
   }
   return (
-    <div className="space-y-1 p-2">
-      {tabs.map((t) => {
-        const tabUrl = t.url || '';
-        return (
-          <div
-            key={t.targetId || t.id}
-            className="group relative flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-xs transition-all hover:border-primary/50 hover:bg-accent/50"
+    <div className="flex h-full flex-col">
+      {/* 搜索 + 批量操作栏 */}
+      <div className="flex items-center gap-2 px-2 pb-2">
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={searchValue || ''}
+            onChange={(e) => onSearchChange?.(e.target.value)}
+            placeholder="搜索标签页..."
+            className="h-7 pl-7 pr-7 text-xs"
+          />
+          {searchValue && (
+            <button onClick={() => onSearchChange?.('')} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+              <X className="h-3 w-3" />
+            </button>
+          )}
+        </div>
+        {onToggleSelect && (
+          <button
+            onClick={() => allSelected ? onClearSelect?.() : onSelectAll?.()}
+            className="flex h-7 w-7 items-center justify-center rounded border border-border text-muted-foreground hover:border-primary hover:text-primary"
+            title={allSelected ? '取消全选' : '全选'}
           >
-            <Icon className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
-            <div className="min-w-0 flex-1 cursor-pointer" onClick={() => {
-              // Click tab to copy URL
-              navigator.clipboard.writeText(tabUrl).catch(() => {});
-            }}>
-              <div className="truncate font-medium text-foreground hover:text-primary">{(t.title || tabUrl || 'Tab').slice(0, 60)}</div>
-              <div className="truncate text-muted-foreground hover:text-primary/70">{tabUrl}</div>
-            </div>
-            {/* Action buttons on hover */}
-            <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-              <button
-                onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(tabUrl).catch(() => {}); }}
-                className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-foreground"
-                title="复制 URL"
-              >
-                <Copy className="h-3 w-3" />
-              </button>
-              {tabUrl && (
+            {allSelected ? <X className="h-3 w-3" /> : <Check className="h-3 w-3" />}
+          </button>
+        )}
+        <span className="text-xs text-muted-foreground">{filteredTabs.length}/{tabs.length}</span>
+      </div>
+      {/* Tab 列表 */}
+      <div className="flex-1 space-y-1 overflow-y-auto p-2">
+        {filteredTabs.length === 0 ? (
+          <div className="py-8 text-center text-xs text-muted-foreground">无匹配结果</div>
+        ) : filteredTabs.map((t) => {
+          const tabId = t.targetId || t.id;
+          const tabUrl = t.url || '';
+          const isSelected = selectedTabs?.has(tabId);
+          return (
+            <div
+              key={tabId}
+              className={cn(
+                "group relative flex items-center gap-2 rounded-md border bg-card px-3 py-2 text-xs transition-all",
+                isSelected ? "border-primary bg-primary/5" : "border-border hover:border-primary/50 hover:bg-accent/50"
+              )}
+            >
+              {/* 选择框 */}
+              {onToggleSelect && (
                 <button
-                  onClick={(e) => { e.stopPropagation(); window.open(tabUrl, '_blank'); }}
-                  className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-foreground"
-                  title="在浏览器打开"
+                  onClick={(e) => { e.stopPropagation(); onToggleSelect(tabId); }}
+                  className={cn(
+                    "flex h-4 w-4 flex-shrink-0 items-center justify-center rounded border text-[10px]",
+                    isSelected ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/30"
+                  )}
                 >
-                  <ExternalLink className="h-3 w-3" />
+                  {isSelected && <Check className="h-2.5 w-2.5" />}
                 </button>
               )}
+              <Icon className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
+              <div className="min-w-0 flex-1 cursor-pointer" onClick={() => navigator.clipboard.writeText(tabUrl).catch(() => {})}>
+                <div className="truncate font-medium text-foreground hover:text-primary">{((t as any).title || tabUrl || 'Tab').slice(0, 60)}</div>
+                <div className="truncate text-muted-foreground hover:text-primary/70">{tabUrl}</div>
+              </div>
+              {/* 操作按钮 */}
+              <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(tabUrl).catch(() => {}); }} className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-foreground" title="复制 URL">
+                  <Copy className="h-3 w-3" />
+                </button>
+                {tabUrl && (
+                  <button onClick={(e) => { e.stopPropagation(); window.open(tabUrl, '_blank'); }} className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-foreground" title="在浏览器打开">
+                    <ExternalLink className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
+      {/* 批量操作栏 */}
+      {selectedTabs && selectedTabs.size > 0 && (
+        <div className="flex items-center gap-2 border-t border-border px-2 py-1.5 text-xs">
+          <span className="text-muted-foreground">已选 {selectedTabs.size} 个</span>
+          <Button size="sm" variant="outline" className="h-6 px-2 text-xs" onClick={() => {
+            navigator.clipboard.writeText(tabs.filter(t => selectedTabs.has(t.targetId || t.id)).map(t => t.url).join('\n')).catch(() => {});
+            pushToast({ kind: 'success', title: `已复制 ${selectedTabs.size} 个 URL` });
+          }}>
+            <Copy className="mr-1 h-3 w-3" />复制全部
+          </Button>
+          <Button size="sm" variant="outline" className="h-6 px-2 text-xs" onClick={() => {
+            const urls = tabs.filter(t => selectedTabs.has(t.targetId || t.id)).map(t => t.url).filter(Boolean);
+            urls.forEach(u => window.open(u, '_blank'));
+          }}>
+            <ExternalLink className="mr-1 h-3 w-3" />批量打开
+          </Button>
+          <Button size="sm" variant="ghost" className="ml-auto h-6 px-2 text-xs" onClick={() => onClearSelect?.()}>取消</Button>
+        </div>
+      )}
     </div>
   );
 }

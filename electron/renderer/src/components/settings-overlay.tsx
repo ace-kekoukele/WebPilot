@@ -1,6 +1,7 @@
 // src/components/settings-overlay.tsx — 设置 (12 类目, shadcn Dialog + Tabs + lucide)
+// 增强: 导入/导出 + 重置 + 统计概览
 import { useState, useEffect } from 'react';
-import { Link2, Globe, Bot, MessageSquare, Layers, Monitor, Languages, FileText, Bell, Shield, RefreshCw, Wrench, Search, type LucideIcon } from 'lucide-react';
+import { Link2, Globe, Bot, MessageSquare, Layers, Monitor, Languages, FileText, Bell, Shield, RefreshCw, Wrench, Search, RotateCcw, Download, Upload, type LucideIcon } from 'lucide-react';
 import { apiGet, apiPost } from '../lib/api';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Input } from './ui/input';
@@ -128,7 +129,7 @@ export function SettingsOverlay({ onClose }: Props) {
                     const blob = new Blob([JSON.stringify(fields, null, 2)], { type: 'application/json' });
                     const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
                     a.download = `webpilot-${cat}-${Date.now()}.json`; a.click();
-                  }}>导出配置</Button>
+                  }}><Download className="mr-1 h-3 w-3" />导出</Button>
                   <Button variant="outline" size="sm" onClick={() => {
                     const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json';
                     inp.onchange = async () => {
@@ -141,7 +142,11 @@ export function SettingsOverlay({ onClose }: Props) {
                       } catch { setSaveStatus('✗ 文件格式错误'); }
                     };
                     inp.click();
-                  }}>导入配置</Button>
+                  }}><Upload className="mr-1 h-3 w-3" />导入</Button>
+                  <Button variant="ghost" size="sm" onClick={() => {
+                    setFields({});
+                    setSaveStatus('✓ 已清空,点保存生效');
+                  }}><RotateCcw className="mr-1 h-3 w-3" />重置</Button>
                 </>
               )}
               <Button variant="outline" size="sm" onClick={onClose}>关闭</Button>

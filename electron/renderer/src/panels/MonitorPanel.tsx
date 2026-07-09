@@ -1,6 +1,6 @@
 // src/panels/MonitorPanel.tsx — 监控 (工作日志 + 网络 + Console SSE) with shadcn Tabs + EmptyState + Skeleton
-import { useState, useEffect, useRef } from 'react';
-import { Search, Activity, Network, Terminal, Trash2, MousePointerClick, Shield, Zap } from 'lucide-react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { Search, Activity, Network, Terminal, Trash2, MousePointerClick, Shield, Zap, ArrowUpDown, ArrowUp, ArrowDown, Filter } from 'lucide-react';
 import { useAppStore, store } from '../store';
 import { apiGet, apiPost } from '../lib/api';
 import { Input } from '../components/ui/input';
@@ -280,24 +280,65 @@ function ActivityTable({ rows }: { rows: any[] }) {
 }
 
 function NetworkTable({ rows, selectedId, onSelect }: { rows: any[]; selectedId?: string; onSelect: (r: any) => void }) {
+  const [sortCol, setSortCol] = useState<'ts' | 'method' | 'url' | 'status'>('ts');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+
+  const sorted = useMemo(() => {
+    return [...rows].sort((a, b) => {
+      let va: any = a[sortCol], vb: any = b[sortCol];
+      if (sortCol === 'ts') { va = a.ts ?? 0; vb = b.ts ?? 0; }
+      if (typeof va === 'string') { va = va.toLowerCase(); vb = (vb || '').toLowerCase(); }
+      if (va < vb) return sortDir === 'asc' ? -1 : 1;
+      if (va > vb) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [rows, sortCol, sortDir]);
+
+  const SortIcon = ({ col }: { col: typeof sortCol }) => sortCol === col
+    ? (sortDir === 'asc' ? <ArrowUp className="h-2.5 w-2.5" /> : <ArrowDown className="h-2.5 w-2.5" />)
+    : <ArrowUpDown className="h-2.5 w-2.5 text-muted-foreground/30" />;
+
+  const methodColor = (m: string) => {
+    switch (m) {
+      case 'GET': return 'bg-blue-500/10 text-blue-500';
+      case 'POST': return 'bg-green-500/10 text-green-500';
+      case 'PUT': return 'bg-orange-500/10 text-orange-500';
+      case 'DELETE': return 'bg-red-500/10 text-red-500';
+      case 'PATCH': return 'bg-purple-500/10 text-purple-500';
+      default: return 'bg-muted text-muted-foreground';
+    }
+  };
+
   return (
     <div className="rounded-md border border-border">
-      <div className="grid grid-cols-[80px_60px_1fr_60px_120px] gap-2 border-b border-border bg-muted/40 px-3 py-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
-        <div>时间</div><div>Method</div><div>URL</div><div>状态</div><div>MIME</div>
+      <div className="grid grid-cols-[80px_70px_1fr_60px_120px] gap-2 border-b border-border bg-muted/40 px-3 py-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+        <button className="flex items-center gap-1 hover:text-foreground" onClick={() => { if (sortCol === 'ts') setSortDir(d => d === 'asc' ? 'desc' : 'asc'); else { setSortCol('ts'); setSortDir('desc'); } }}>
+          <span>时间</span><SortIcon col="ts" />
+        </button>
+        <button className="flex items-center gap-1 hover:text-foreground" onClick={() => { if (sortCol === 'method') setSortDir(d => d === 'asc' ? 'desc' : 'asc'); else { setSortCol('method'); setSortDir('asc'); } }}>
+          <span>Method</span><SortIcon col="method" />
+        </button>
+        <button className="flex items-center gap-1 hover:text-foreground" onClick={() => { if (sortCol === 'url') setSortDir(d => d === 'asc' ? 'desc' : 'asc'); else { setSortCol('url'); setSortDir('asc'); } }}>
+          <span>URL</span><SortIcon col="url" />
+        </button>
+        <button className="flex items-center gap-1 hover:text-foreground" onClick={() => { if (sortCol === 'status') setSortDir(d => d === 'asc' ? 'desc' : 'asc'); else { setSortCol('status'); setSortDir('asc'); } }}>
+          <span>状态</span><SortIcon col="status" />
+        </button>
+        <div>MIME</div>
       </div>
-      {rows.map((e, i) => (
+      {sorted.map((e, i) => (
         <div
           key={i}
           onClick={() => onSelect(e)}
           className={cn(
-            'grid cursor-pointer grid-cols-[80px_60px_1fr_60px_120px] gap-2 border-b border-border px-3 py-1.5 text-xs last:border-b-0',
+            'grid cursor-pointer grid-cols-[80px_70px_1fr_60px_120px] gap-2 border-b border-border px-3 py-1.5 text-xs last:border-b-0',
             e.requestId === selectedId ? 'bg-accent' : 'hover:bg-accent/30',
           )}
         >
           <div className="text-muted-foreground">{new Date(e.ts).toLocaleTimeString()}</div>
-          <div className="font-mono font-medium">{e.method || '·'}</div>
+          <div><span className={cn('rounded px-1 py-0.5 font-mono text-[10px] font-medium', methodColor(e.method))}>{e.method || '·'}</span></div>
           <div className="truncate text-muted-foreground" title={e.url}>{e.url}</div>
-          <div className={cn((e.status >= 400 ? 'text-destructive' : 'text-success'))}>{e.status || '·'}</div>
+          <div className={cn('font-medium', (e.status >= 400 ? 'text-destructive' : e.status >= 300 ? 'text-warning' : 'text-success'))}>{e.status || '·'}</div>
           <div className="truncate text-muted-foreground">{(e.mimeType || '').split(';')[0]}</div>
         </div>
       ))}

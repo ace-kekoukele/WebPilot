@@ -1,7 +1,7 @@
 // src/panels/ChatPanel.tsx — AI 助手 (Mac 级: shadcn + markdown + 流式光标 + tool-call card)
 // SSE 解析器保留原逻辑(plan P5 明确"不动 — 最风险的部分")
 import { useState, useEffect } from 'react';
-import { Plus, Send, AlertTriangle, Sparkles } from 'lucide-react';
+import { Plus, Send, AlertTriangle, Sparkles, X } from 'lucide-react';
 import { useAppStore, store } from '../store';
 import { apiGet } from '../lib/api';
 import { Button } from '../components/ui/button';
@@ -18,6 +18,7 @@ export function ChatPanel({ onToast }: Props) {
   const [busy, setBusy] = useState(false);
   const [atPopover, setAtPopover] = useState(false);
   const [atQuery, setAtQuery] = useState('');
+  const [quoteContent, setQuoteContent] = useState<string | null>(null);
   const [tools, setTools] = useState<any[]>([]);
   const [caretPos, setCaretPos] = useState(0);
   const session = useAppStore((s) => s.chatSession);
@@ -45,6 +46,13 @@ export function ChatPanel({ onToast }: Props) {
       store.setChatDraftPrompt(null);
     }
   }, [draft]);
+
+  // 引用 AI 回复
+  const handleQuote = (content: string) => {
+    const truncated = content.slice(0, 200);
+    setQuoteContent(truncated);
+  };
+  const clearQuote = () => setQuoteContent(null);
 
   const current = session.find((s) => s.id === currentId);
   const messages = current?.messages ?? [];
@@ -161,6 +169,7 @@ export function ChatPanel({ onToast }: Props) {
                       content={m.content}
                       toolCalls={m.toolCalls}
                       streaming={isStreamingAssistant}
+                      onQuote={handleQuote}
                     />
                   );
                 })}
@@ -177,6 +186,16 @@ export function ChatPanel({ onToast }: Props) {
           {/* 输入区 */}
           <div className="border-t border-border p-3">
             <div className="mx-auto max-w-3xl space-y-2">
+              {/* 引用预览 */}
+              {quoteContent && (
+                <div className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2 text-xs">
+                  <span className="flex-shrink-0 text-muted-foreground">引用:</span>
+                  <span className="line-clamp-1 flex-1 truncate text-muted-foreground">"{quoteContent}"</span>
+                  <button onClick={clearQuote} className="flex-shrink-0 text-muted-foreground hover:text-foreground">
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
               <div className="relative">
                 <textarea
                   value={input}
