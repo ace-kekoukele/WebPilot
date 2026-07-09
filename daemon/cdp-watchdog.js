@@ -81,6 +81,7 @@ class CdpWatchdog extends EventEmitter {
     if (this.state === 'CONNECTED' || this.state === 'CONNECTING') {
       this.state = 'DEGRADED';
       this.emit('state:change', this.getState());
+      this._notify('WebPilot', 'Chrome DevTools 连接中断,正在重连...');
     }
     this._scheduleReconnect();
   }
@@ -89,10 +90,16 @@ class CdpWatchdog extends EventEmitter {
     if (this.attempts >= MAX_FAIL) {
       this.state = 'FAILED';
       this.emit('state:change', this.getState());
+      this._notify('WebPilot — Chrome 断开了', '无法连接 Chrome DevTools。请确认 Chrome 正在运行且已启用 --remote-debugging-port=9222。');
       this.emit('cdp:critical', { attempts: this.attempts, error: err?.message });
       return;
     }
     this._scheduleReconnect();
+  }
+
+  // Chrome 断开时触发通知 (由 daemon/main.js 转发到 Electron Notification)
+  _notify(title, body) {
+    process.stdout.write(`[NOTIFY]${JSON.stringify({ title, body })}\n`);
   }
 
   _scheduleReconnect() {

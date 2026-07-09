@@ -1,8 +1,12 @@
-// electron/menu.js — 原生应用菜单
-// 文件 / 编辑 / 视图 / 窗口 / 帮助
-import { Menu, app, shell } from 'electron';
+// electron/menu.cjs — 原生应用菜单 (CJS)
+// 菜单项点击 → 统一 send('menu:command', 'openXxx') 给 renderer
+const { Menu, app, shell } = require('electron');
 
-export function buildAppMenu() {
+function sendCommand(win, cmd) {
+  if (win) win.webContents.send('menu:command', cmd);
+}
+
+function buildAppMenu() {
   const isMac = process.platform === 'darwin';
 
   const template = [
@@ -71,16 +75,21 @@ export function buildAppMenu() {
         {
           label: '快捷键速查',
           accelerator: 'F1',
-          click: (_m, win) => {
-            if (win) win.webContents.send('app:openHelp');
-          },
+          click: (_m, win) => sendCommand(win, 'openHelp'),
         },
         {
           label: '命令面板',
           accelerator: 'CmdOrCtrl+K',
-          click: (_m, win) => {
-            if (win) win.webContents.send('app:openPalette');
-          },
+          click: (_m, win) => sendCommand(win, 'openPalette'),
+        },
+        {
+          label: '设置',
+          accelerator: 'CmdOrCtrl+,',
+          click: (_m, win) => sendCommand(win, 'openSettings'),
+        },
+        {
+          label: '修复',
+          click: (_m, win) => sendCommand(win, 'openRepair'),
         },
         { type: 'separator' },
         {
@@ -97,3 +106,5 @@ export function buildAppMenu() {
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
+
+module.exports = { buildAppMenu };

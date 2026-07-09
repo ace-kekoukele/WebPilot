@@ -16,14 +16,14 @@ import { BrowserPanel } from './panels/BrowserPanel';
 import { ChatPanel } from './panels/ChatPanel';
 import { AutomationPanel } from './panels/AutomationPanel';
 import { MonitorPanel } from './panels/MonitorPanel';
-import { useAppStore } from './store';
+import { store, useAppStore } from './store';
 import { useTheme } from './components/theme-provider';
 import { apiGet } from './lib/api';
 
 type Mode = 'browser' | 'chat' | 'automation' | 'monitor' | 'wizard';
 
 const WHATS_NEW_KEY = 'webpilot-seen-whats-new';
-const CURRENT_VERSION = '4.0.3';
+const CURRENT_VERSION = '4.0.4';
 
 const MODE_TRANSITION = {
   initial: { opacity: 0, y: 8 },
@@ -43,13 +43,11 @@ export function App() {
   const [whatsNewOpen, setWhatsNewOpen] = useState<boolean>(() => {
     return localStorage.getItem(WHATS_NEW_KEY) !== CURRENT_VERSION;
   });
-  const store = useAppStore();
-  const [tools, setTools] = useState<any[]>([]);
-
   const dismissWhatsNew = useCallback(() => {
     localStorage.setItem(WHATS_NEW_KEY, CURRENT_VERSION);
     setWhatsNewOpen(false);
   }, []);
+  const [tools, setTools] = useState<any[]>([]);
 
   // 启动时加载工具 + 健康检查
   useEffect(() => {
@@ -110,6 +108,21 @@ export function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  // 监听 IPC 菜单/托盘命令 (tray.cjs / menu.cjs 发的 menu:command)
+  useEffect(() => {
+    const api = (window as any).electronAPI;
+    if (!api?.onMenuCommand) return;
+    const off = api.onMenuCommand((cmd: string) => {
+      switch (cmd) {
+        case 'openSettings': setSettingsOpen(true); break;
+        case 'openRepair': setRepairOpen(true); break;
+        case 'openHelp': setHelpOpen(true); break;
+        case 'openPalette': setPaletteOpen((v) => !v); break;
+      }
+    });
+    return off;
+  }, []);
+
   const openRepair = useCallback(() => setRepairOpen(true), []);
 
   return (
@@ -133,7 +146,7 @@ export function App() {
             >
               {mode === 'browser' && <BrowserPanel tools={tools} />}
               {mode === 'chat' && <ChatPanel onToast={pushToast} />}
-              {mode === 'automation' && <AutomationPanel tools={tools} />}
+              {mode === 'automation' && <AutomationPanel tools={tools} onSwitchMode={setMode} />}
               {mode === 'monitor' && <MonitorPanel />}
               {mode === 'wizard' && <Wizard onDone={() => setMode('browser')} />}
             </motion.div>
@@ -143,7 +156,7 @@ export function App() {
       <BottomDrawer open={drawerOpen} onToggle={() => setDrawerOpen((v) => !v)} onOpenRepair={openRepair} />
 
       {whatsNewOpen && <WhatsNewOverlay onClose={dismissWhatsNew} />}
-      {paletteOpen && <CommandPalette tools={tools} onClose={() => setPaletteOpen(false)} onToast={pushToast} onOpenRepair={openRepair} onOpenSettings={() => { setPaletteOpen(false); setSettingsOpen(true); }} />}
+      {paletteOpen && <CommandPalette tools={tools} onClose={() => setPaletteOpen(false)} onToast={pushToast} onOpenRepair={openRepair} onOpenSettings={() => { setPaletteOpen(false); setSettingsOpen(true); }} onOpenHelp={() => { setPaletteOpen(false); setHelpOpen(true); }} />}
       {helpOpen && <HelpOverlay onClose={() => setHelpOpen(false)} />}
       {settingsOpen && <SettingsOverlay onClose={() => setSettingsOpen(false)} />}
       {repairOpen && <RepairDialog onClose={() => setRepairOpen(false)} onToast={pushToast} />}

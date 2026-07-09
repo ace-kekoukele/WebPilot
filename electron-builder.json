@@ -18,6 +18,13 @@
     "!**/*.test.js",
     "!**/__tests__/**"
   ],
+  "asarUnpack": [
+    "package.json",
+    "daemon/**/*",
+    "lib/**/*",
+    "tools/**/*",
+    "node_modules/**/*"
+  ],
   "extraResources": [
     {
       "from": "build",

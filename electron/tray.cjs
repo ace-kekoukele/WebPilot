@@ -1,24 +1,26 @@
-// electron/tray.js — 系统托盘
-// 右键菜单: 打开 / 修复 / 设置 / 关于 / 退出
-// 单击托盘: 显示/隐藏窗口
-import { Tray, Menu, nativeImage, app } from 'electron';
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { existsSync } from 'node:fs';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
+// electron/tray.cjs — 系统托盘 (CJS)
+// 菜单项点击 → 统一 send('menu:command', 'openSettings' | 'openRepair' | ...) 给 renderer
+const { Tray, Menu, nativeImage, app } = require('electron');
+const { join } = require('node:path');
+const { existsSync } = require('node:fs');
 
 let tray = null;
 
 function trayIconPath() {
-  // electron-builder 打包后: process.resourcesPath/build/icon-16.png
-  // 开发模式: <project>/build/icon-16.png
+  // extraResources 把 build/ 复制到 resources/build/ (packaged) 或 build/ (dev)
+  const isDev = !app.isPackaged;
   const devPath = join(__dirname, '..', 'build', 'icon-16.png');
-  if (existsSync(devPath)) return devPath;
+  if (isDev) return devPath;
   return join(process.resourcesPath, 'build', 'icon-16.png');
 }
 
-export function initTray({ onOpenWindow, onQuit, getWindow }) {
+function sendCommand(win, cmd) {
+  if (!win) return;
+  win.webContents.send('menu:command', cmd);
+  if (!win.isVisible()) win.show();
+}
+
+function initTray({ onOpenWindow, onQuit, getWindow }) {
   const iconPath = trayIconPath();
   if (!existsSync(iconPath)) {
     console.warn('[tray] 图标不存在:', iconPath, '— 托盘不初始化');
@@ -31,7 +33,6 @@ export function initTray({ onOpenWindow, onQuit, getWindow }) {
 
   rebuildMenu({ onOpenWindow, onQuit, getWindow });
 
-  // 单击切换窗口可见性 (Windows)
   tray.on('click', () => {
     const win = getWindow?.();
     if (!win) return onOpenWindow?.();
@@ -43,7 +44,6 @@ export function initTray({ onOpenWindow, onQuit, getWindow }) {
     }
   });
 
-  // 右键菜单重建 (窗口可见性变化时)
   if (getWindow) {
     setInterval(() => {
       const win = getWindow();
@@ -74,34 +74,30 @@ function rebuildMenu({ onOpenWindow, onQuit, getWindow }) {
     { type: 'separator' },
     {
       label: '设置',
-      click: () => {
-        const w = getWindow?.();
-        if (w) {
-          w.webContents.send('app:openSettings');
-          if (!w.isVisible()) w.show();
-        }
-      },
+      click: () => sendCommand(getWindow?.(), 'openSettings'),
     },
     {
       label: '修复',
-      click: () => {
-        const w = getWindow?.();
-        if (w) {
-          w.webContents.send('app:openRepair');
-          if (!w.isVisible()) w.show();
-        }
-      },
+      click: () => sendCommand(getWindow?.(), 'openRepair'),
+    },
+    {
+      label: '帮助',
+      click: () => sendCommand(getWindow?.(), 'openHelp'),
+    },
+    {
+      label: '命令面板',
+      click: () => sendCommand(getWindow?.(), 'openPalette'),
     },
     { type: 'separator' },
     {
       label: '关于 WebPilot',
-      click: async () => {
-        const { dialog } = await import('electron');
+      click: () => {
+        const { dialog } = require('electron');
         dialog.showMessageBox({
           type: 'info',
           title: '关于 WebPilot',
           message: 'WebPilot',
-          detail: '让 AI 助手操作你的浏览器\nv4.0.3 · Mac 级工业设计 · shadcn/ui',
+          detail: '让 AI 助手操作你的浏览器\nv4.0.4 · 大而全版本',
           buttons: ['好'],
         });
       },
@@ -115,9 +111,11 @@ function rebuildMenu({ onOpenWindow, onQuit, getWindow }) {
   tray.setContextMenu(menu);
 }
 
-export function destroyTray() {
+function destroyTray() {
   if (tray) {
     tray.destroy();
     tray = null;
   }
 }
+
+module.exports = { initTray, destroyTray };

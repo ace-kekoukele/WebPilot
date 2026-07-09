@@ -127,6 +127,13 @@ async function startServers(ports) {
       log.info('http-started', { port: h.port });
     } catch (e) { log.error('http-start-failed', { error: e.message }); }
   }
+
+  // 启动 console stream (Runtime.consoleAPICalled + Log.entryAdded → SSE)
+  try {
+    const { ensureConsoleStream } = await import('./console-stream.js');
+    await ensureConsoleStream();
+    log.info('console-stream-started');
+  } catch (e) { log.error('console-stream-failed', { error: e.message }); }
   // control / webhook / sse 暂不接, 留 hook
   return started;
 }

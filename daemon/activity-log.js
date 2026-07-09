@@ -68,6 +68,13 @@ class ActivityLog extends EventEmitter {
     // 写文件
     try { appendFileSync(this._todayFile, JSON.stringify(entry) + '\n'); } catch {}
     this.emit('activity', entry);
+
+    // B2-21: 工具调用失败时推桌面通知
+    if (!entry.ok && entry.error && entry.tool) {
+      try {
+        process.stdout.write(`[NOTIFY]${JSON.stringify({ title: `工具调用失败 — ${entry.tool}`, body: entry.error.slice(0, 120) })}\n`);
+      } catch {}
+    }
   }
 
   query({ agent, tool, ok, since, until, limit = 200 } = {}) {

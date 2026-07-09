@@ -40,6 +40,22 @@ if ($major -lt 22) {
 }
 Write-Host "[OK] Node.js v$nodeVer" -ForegroundColor Green
 
+# 1.5 Chrome 检测 (B2-24)
+$chromePaths = @(
+  'C:\Program Files\Google\Chrome\Application\chrome.exe',
+  "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe",
+  "${env:ProgramFiles}\Google\Chrome\Application\chrome.exe"
+)
+$chromeFound = $false
+foreach ($cp in $chromePaths) {
+  if (Test-Path $cp) { $chromeFound = $true; Write-Host "[OK] Chrome 找到: $cp" -ForegroundColor Green; break }
+}
+if (-not $chromeFound) {
+  Write-Host '[!] Chrome 未检测到 — 请先安装 Chrome' -ForegroundColor Red
+  Write-Host '    下载地址: https://www.google.com/chrome/' -ForegroundColor Yellow
+  Write-Host '    安装后再跑此脚本' -ForegroundColor Yellow
+}
+
 # 1.5 端口扫描 — 默认端口被占时提示用户 (开箱即用要点)
 $DefaultPorts = @(9222, 9223, 9224, 9225)   # CDP / MCP / HTTP / Control
 $BusyPorts = @()
@@ -196,6 +212,22 @@ start "WebPilot" node daemon/main.js
 }
 
 Pop-Location
+
+# 6. 开自启勾选 (B2-26)
+$autoLaunch = Read-Host '是否开机自启 WebPilot? (Y/N, 默认 N)'
+if ($autoLaunch -eq 'Y' -or $autoLaunch -eq 'y') {
+  try {
+    $regPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
+    if ($useElectron) {
+      Set-ItemProperty -Path $regPath -Name 'WebPilot' -Value "`"$exePath`"" -ErrorAction Stop
+    } else {
+      Set-ItemProperty -Path $regPath -Name 'WebPilot' -Value "node `"$InstallDir\daemon\main.js`"" -ErrorAction Stop
+    }
+    Write-Host '[OK] 已设置开机自启 (可随时在 设置 → 系统 → 启动 里关掉)' -ForegroundColor Green
+  } catch {
+    Write-Host '[!] 开自启设置失败: $_' -ForegroundColor Yellow
+  }
+}
 
 Write-Host ''
 Write-Host '=== 安装完成 ===' -ForegroundColor Green

@@ -3,17 +3,17 @@
 > 让你的 AI 助手(Claude / Cursor / ...)直接操作你电脑上的 Chrome。
 > 双击图标就用,不用懂任何技术。
 
-[![version](https://img.shields.io/badge/version-4.0.3-blue)] [![tests](https://img.shields.io/badge/tests-201%2F201-brightgreen)] [![license](https://img.shields.io/badge/license-MIT-green)]
+[![version](https://img.shields.io/badge/version-4.0.4-blue)] [![tests](https://img.shields.io/badge/tests-201%2F201-brightgreen)] [![license](https://img.shields.io/badge/license-MIT-green)]
 
 ---
 
 ## 3 步开始
 
-1. **下载安装包** — [WebPilot Setup 4.0.3.exe (91 MB)](https://github.com/webpilot/webpilot/releases/latest)
+1. **下载安装包** — [WebPilot Setup 4.0.4.exe (91 MB)](https://github.com/webpilot/webpilot/releases/latest)
 2. **双击装好** — "下一步 → 下一步 → 完成",桌面出现 `WebPilot` 图标
 3. **启动 Chrome + 双击桌面图标** — 看到桌面应用,搞定
 
-> macOS / Linux 用户:见下方"开发者安装"。
+> macOS / Linux 用户:见下方"开发者安装"。v4.4+ 才考虑 macOS;Linux 不在路线图上。
 
 ---
 
@@ -119,4 +119,4 @@ npm run check          # 后端语法检查
 
 ---
 
-**版本:** v4.0.3 (2026-07-09) — Mac 级工业设计 + 桌面应用
+**版本:** v4.0.4 (2026-07-09) — 大而全版本 · 42 项更新

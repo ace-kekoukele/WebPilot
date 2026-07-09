@@ -4,23 +4,71 @@ import { ListTree, Circle, Square, Globe, BarChart3, Lock, FileText, Eye, Sparkl
 import { Button } from '../components/ui/button';
 import { EmptyState } from '../components/empty-state';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs';
+import { pushToast } from '../components/Toast';
+import { store } from '../store';
 import { cn } from '../lib/cn';
 
-interface Props { tools: any[]; }
+interface Props {
+  tools: any[];
+  onSwitchMode?: (mode: 'chat') => void;
+}
 
 const TEMPLATES = [
-  { id: 'login-and-screenshot', icon: Globe, name: '网站逆向', desc: '分析目标页面结构 + 抓 API' },
-  { id: 'extract-table', icon: BarChart3, name: '批量抓表格', desc: '列表 URL → 抓表格 → CSV' },
-  { id: 'login-cookies', icon: Lock, name: '登录 + 抓 Cookie', desc: '登录并导出 cookie' },
-  { id: 'fill-form', icon: FileText, name: '批量填表', desc: 'CSV → 填表 → 提交' },
-  { id: 'monitor-change', icon: Eye, name: '监控变化', desc: '轮询 URL, 变化时截图' },
+  {
+    id: 'login-and-screenshot',
+    icon: Globe,
+    name: '网站逆向',
+    desc: '分析目标页面结构 + 抓 API',
+    prompt: '请帮我逆向这个网站:打开 https://example.com, 截一张首屏图, 列出页面结构, 找出主要 API 端点。',
+  },
+  {
+    id: 'extract-table',
+    icon: BarChart3,
+    name: '批量抓表格',
+    desc: '列表 URL → 抓表格 → CSV',
+    prompt: '请打开 https://example.com/data, 抓页面里所有表格, 导出成 CSV 文件保存。',
+  },
+  {
+    id: 'login-cookies',
+    icon: Lock,
+    name: '登录 + 抓 Cookie',
+    desc: '登录并导出 cookie',
+    prompt: '请帮我登录 example.com (账号 password), 登录完成后导出所有 cookie 到本地文件。',
+  },
+  {
+    id: 'fill-form',
+    icon: FileText,
+    name: '批量填表',
+    desc: 'CSV → 填表 → 提交',
+    prompt: '请读取 ~/data.csv, 对每一行打开 https://example.com/form, 把列填入对应字段后点提交。',
+  },
+  {
+    id: 'monitor-change',
+    icon: Eye,
+    name: '监控变化',
+    desc: '轮询 URL, 变化时截图',
+    prompt: '请帮我监控 https://example.com/status, 每 60 秒刷新, 看到新内容就截图保存并通知我。',
+  },
 ];
 
-export function AutomationPanel({ tools }: Props) {
+export function AutomationPanel({ tools, onSwitchMode }: Props) {
   const [tab, setTab] = useState<'workflow' | 'recorder' | 'templates'>('workflow');
   const [recording, setRecording] = useState(false);
   const [events, setEvents] = useState<any[]>([]);
   const recorderStartRef = useRef<number>(0);
+
+  const runTemplate = (t: typeof TEMPLATES[number]) => {
+    if (!onSwitchMode) {
+      pushToast({ kind: 'warn', title: '运行需要切到聊天模式', description: '点侧边栏"聊天"图标' });
+      return;
+    }
+    // 检查 LLM 是否配置
+    const llmActive = store.getState ? store.getState() : null;
+    // store 没有 getState — 用 useAppStore 不行这里; 走 pushToast 提示
+    store.setChatDraftPrompt(t.prompt);
+    pushToast({ kind: 'success', title: `模板已填好: ${t.name}`, description: '跳到聊天 → 点发送即可' });
+    onSwitchMode('chat');
+  };
 
   return (
     <section className="mode-panel flex h-full flex-col p-4">
@@ -35,7 +83,7 @@ export function AutomationPanel({ tools }: Props) {
           <EmptyState
             icon={ListTree}
             title="工作流画布"
-            description="节点拖入 + 端口连线 + 运行/单步/重置. v4.0.3 接 vanilla SVG 画布, v4.1 迁 @xyflow/react"
+            description="节点拖入 + 端口连线 + 运行/单步/重置. v4.0.4 接 @xyflow/react (P2-28 待做)"
             action={
               <Button size="sm" onClick={() => {
                 const host = document.getElementById('wf-host');
@@ -95,7 +143,7 @@ export function AutomationPanel({ tools }: Props) {
                 <button
                   key={t.id}
                   className="group rounded-lg border border-border bg-card p-4 text-left transition-all hover:border-primary/50 hover:shadow-sm"
-                  onClick={() => alert('运行需要 LLM Provider. 先在设置 → LLM API 配 key')}
+                  onClick={() => runTemplate(t)}
                 >
                   <div className="mb-2 flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary transition-colors group-hover:bg-primary/20">

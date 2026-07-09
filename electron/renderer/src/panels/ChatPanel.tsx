@@ -16,6 +16,10 @@ interface Props { onToast: (t: any) => void; }
 export function ChatPanel({ onToast }: Props) {
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
+  const [atPopover, setAtPopover] = useState(false);
+  const [atQuery, setAtQuery] = useState('');
+  const [tools, setTools] = useState<any[]>([]);
+  const [caretPos, setCaretPos] = useState(0);
   const session = useAppStore((s) => s.chatSession);
   const currentId = useAppStore((s) => s.currentSessionId);
   const activeProvider = useAppStore((s) => s.llmActive);
@@ -24,11 +28,23 @@ export function ChatPanel({ onToast }: Props) {
 
   useEffect(() => {
     if (session.length === 0) store.newChatSession();
-    apiGet('/api/llm/providers').then((r) => {
-      setProviders(r.configured || []);
-      store.setLLMProviders(r.configured || [], r.active);
-    }).catch(() => {});
+    Promise.all([
+      apiGet('/api/tools/list').then((r) => setTools(r.tools || [])).catch(() => {}),
+      apiGet('/api/llm/providers').then((r) => {
+        setProviders(r.configured || []);
+        store.setLLMProviders(r.configured || [], r.active);
+      }).catch(() => {}),
+    ]);
   }, []);
+
+  // 消费模板跳过来的 draft prompt
+  const draft = useAppStore((s) => s.chatDraftPrompt);
+  useEffect(() => {
+    if (draft) {
+      setInput(draft);
+      store.setChatDraftPrompt(null);
+    }
+  }, [draft]);
 
   const current = session.find((s) => s.id === currentId);
   const messages = current?.messages ?? [];
@@ -161,22 +177,65 @@ export function ChatPanel({ onToast }: Props) {
           {/* 输入区 */}
           <div className="border-t border-border p-3">
             <div className="mx-auto max-w-3xl space-y-2">
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
-                }}
-                placeholder="输入消息... (Enter 发送 · Shift+Enter 换行 · @ 工具 · / 模板)"
-                rows={3}
-                disabled={busy}
-                className={cn(
-                  'flex w-full resize-none rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm',
-                  'text-foreground placeholder:text-muted-foreground',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                  'disabled:cursor-not-allowed disabled:opacity-50',
+              <div className="relative">
+                <textarea
+                  value={input}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setInput(val);
+                    const pos = e.target.selectionStart;
+                    setCaretPos(pos);
+                    // 检测 @ 触发补全
+                    const before = val.slice(0, pos);
+                    const atIdx = before.lastIndexOf('@');
+                    if (atIdx >= 0 && !before.slice(atIdx).includes(' ')) {
+                      setAtQuery(before.slice(atIdx + 1));
+                      setAtPopover(true);
+                    } else {
+                      setAtPopover(false);
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (atPopover && e.key === 'Escape') { setAtPopover(false); return; }
+                    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+                  }}
+                  placeholder="输入消息... (Enter 发送 · Shift+Enter 换行 · @ 工具 · / 模板)"
+                  rows={3}
+                  disabled={busy}
+                  className={cn(
+                    'flex w-full resize-none rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm',
+                    'text-foreground placeholder:text-muted-foreground',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                    'disabled:cursor-not-allowed disabled:opacity-50',
+                  )}
+                />
+                {atPopover && (
+                  <div className="absolute bottom-full left-0 z-50 mb-1 max-h-60 w-72 overflow-auto rounded-lg border border-border bg-popover p-1 shadow-lg">
+                    {tools.filter((t) => t.name?.toLowerCase().includes(atQuery.toLowerCase())).slice(0, 8).map((t) => (
+                      <button
+                        key={t.name}
+                        className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs hover:bg-accent"
+                        onClick={() => {
+                          const pos = caretPos;
+                          const before = input.slice(0, pos);
+                          const atIdx = before.lastIndexOf('@');
+                          const after = input.slice(pos);
+                          const inserted = t.name + ' ';
+                          setInput(before.slice(0, atIdx) + inserted + after);
+                          setAtPopover(false);
+                          setAtQuery('');
+                        }}
+                      >
+                        <span className="font-mono font-medium">{t.name}</span>
+                        <span className="truncate text-muted-foreground">{t.description}</span>
+                      </button>
+                    ))}
+                    {atQuery && tools.filter((t) => t.name?.toLowerCase().includes(atQuery.toLowerCase())).length === 0 && (
+                      <p className="px-2 py-1.5 text-xs text-muted-foreground">无匹配工具</p>
+                    )}
+                  </div>
                 )}
-              />
+              </div>
               <div className="flex items-center gap-2">
                 <select
                   value={activeProvider || ''}
