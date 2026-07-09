@@ -31,6 +31,12 @@ export function SettingsOverlay({ onClose }: Props) {
   const [fields, setFields] = useState<Record<string, any>>({});
   const [saveStatus, setSaveStatus] = useState('');
 
+  const refreshLLM = () => {
+    apiGet('/api/llm/providers').then((r) => {
+      setFields({ providers: r.presets || [], active: r.active, configured: r.configured || [] });
+    }).catch(() => setFields({ providers: [] }));
+  };
+
   useEffect(() => {
     // 端口类目走 /api/ports(读 + 保存)
     if (cat === 'connect') {
@@ -39,11 +45,9 @@ export function SettingsOverlay({ onClose }: Props) {
       }).catch(() => setFields({}));
       return;
     }
-    // LLM 类目走 /api/llm/providers(读) + /api/llm/active(写)
+    // LLM 类目走 /api/llm/providers(读) + /api/llm/active(写,增删/激活即时生效)
     if (cat === 'llm') {
-      apiGet('/api/llm/providers').then((r) => {
-        setFields({ providers: r.presets || [], active: r.active, configured: r.configured || [] });
-      }).catch(() => setFields({ providers: [] }));
+      refreshLLM();
       return;
     }
     apiGet(`/api/settings/${cat}`).then((r) => setFields(r.fields || r || {})).catch(() => setFields({}));
@@ -113,30 +117,36 @@ export function SettingsOverlay({ onClose }: Props) {
           </aside>
           <div className="flex flex-1 flex-col">
             <ScrollArea className="flex-1 px-5 py-4">
-              <SettingsForm cat={cat} fields={fields} setFields={setFields} />
+              <SettingsForm cat={cat} fields={fields} setFields={setFields} onLLMChanged={refreshLLM} />
             </ScrollArea>
             <div className="flex items-center justify-end gap-2 border-t border-border px-4 py-2.5">
-              <span className="mr-auto text-xs text-muted-foreground">{saveStatus}</span>
-              <Button variant="outline" size="sm" onClick={() => {
-                const blob = new Blob([JSON.stringify(fields, null, 2)], { type: 'application/json' });
-                const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-                a.download = `webpilot-${cat}-${Date.now()}.json`; a.click();
-              }}>导出配置</Button>
-              <Button variant="outline" size="sm" onClick={() => {
-                const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json';
-                inp.onchange = async () => {
-                  const file = inp.files?.[0]; if (!file) return;
-                  const text = await file.text();
-                  try {
-                    const parsed = JSON.parse(text);
-                    setFields(parsed);
-                    setSaveStatus('✓ 已加载,点保存生效');
-                  } catch { setSaveStatus('✗ 文件格式错误'); }
-                };
-                inp.click();
-              }}>导入配置</Button>
+              <span className="mr-auto text-xs text-muted-foreground">
+                {cat === 'llm' ? 'LLM 改动即时生效,无需点保存' : saveStatus}
+              </span>
+              {cat !== 'llm' && (
+                <>
+                  <Button variant="outline" size="sm" onClick={() => {
+                    const blob = new Blob([JSON.stringify(fields, null, 2)], { type: 'application/json' });
+                    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+                    a.download = `webpilot-${cat}-${Date.now()}.json`; a.click();
+                  }}>导出配置</Button>
+                  <Button variant="outline" size="sm" onClick={() => {
+                    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json';
+                    inp.onchange = async () => {
+                      const file = inp.files?.[0]; if (!file) return;
+                      const text = await file.text();
+                      try {
+                        const parsed = JSON.parse(text);
+                        setFields(parsed);
+                        setSaveStatus('✓ 已加载,点保存生效');
+                      } catch { setSaveStatus('✗ 文件格式错误'); }
+                    };
+                    inp.click();
+                  }}>导入配置</Button>
+                </>
+              )}
               <Button variant="outline" size="sm" onClick={onClose}>关闭</Button>
-              <Button size="sm" onClick={save}>保存</Button>
+              {cat !== 'llm' && <Button size="sm" onClick={save}>保存</Button>}
             </div>
           </div>
         </div>
@@ -145,7 +155,7 @@ export function SettingsOverlay({ onClose }: Props) {
   );
 }
 
-function SettingsForm({ cat, fields, setFields }: { cat: string; fields: any; setFields: (f: any) => void }) {
+function SettingsForm({ cat, fields, setFields, onLLMChanged }: { cat: string; fields: any; setFields: (f: any) => void; onLLMChanged: () => void }) {
   if (cat === 'agent') return <p className="text-sm text-muted-foreground">实时显示已连接的 Agent. 查看顶栏 Agent pill 或 Activity Log.</p>;
   if (cat === 'update') return <p className="text-sm text-muted-foreground">v4.0.3 不做自动更新. 升级: 下载新版 .exe 覆盖装即可.</p>;
   if (cat === 'language') return <p className="text-sm text-muted-foreground">v4.0.3 只支持简体中文.</p>;
@@ -157,7 +167,7 @@ function SettingsForm({ cat, fields, setFields }: { cat: string; fields: any; se
 
   // LLM 类目 — 专门 UI
   if (cat === 'llm') {
-    return <LLMForm fields={fields} />;
+    return <LLMForm fields={fields} onChanged={onLLMChanged} />;
   }
 
   const entries = Object.entries(fields || {});
@@ -206,27 +216,115 @@ function PortsForm({ fields, setFields }: { fields: any; setFields: (f: any) => 
   );
 }
 
-function LLMForm({ fields }: { fields: any }) {
-  const providers = fields.providers || [];
-  const configured = fields.configured || [];
+function LLMForm({ fields, onChanged }: { fields: any; onChanged: () => void }) {
+  const presets = fields.providers || [];
+  const configured: any[] = fields.configured || [];
   const active = fields.active;
-  if (providers.length === 0) return <p className="text-sm text-muted-foreground">无法加载 LLM 列表 (daemon 未就绪)</p>;
+  const [presetId, setPresetId] = useState('');
+  const [apiKey, setApiKey] = useState('');
+  const [model, setModel] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState('');
+
+  if (presets.length === 0) return <p className="text-sm text-muted-foreground">无法加载 LLM 列表 (daemon 未就绪)</p>;
+
+  const selectedPreset = presets.find((p: any) => p.id === presetId);
+
+  const addProvider = async () => {
+    if (!presetId) { setMsg('✗ 先选一个厂商'); return; }
+    if (!apiKey.trim()) { setMsg('✗ API key 不能为空'); return; }
+    setSaving(true);
+    try {
+      const r: any = await apiPost('/api/llm/active', {
+        action: 'add-preset',
+        presetId,
+        apiKey: apiKey.trim(),
+        model: model || selectedPreset?.defaultModel,
+      });
+      if (r?.ok) {
+        setMsg('✓ 已添加并激活');
+        setApiKey(''); setPresetId(''); setModel('');
+        onChanged();
+      } else {
+        setMsg(`✗ ${r?.error || '添加失败'}`);
+      }
+    } catch (e: any) {
+      setMsg(`✗ ${e.message}`);
+    } finally {
+      setSaving(false);
+      setTimeout(() => setMsg(''), 3000);
+    }
+  };
+
+  const activate = async (id: string) => {
+    try {
+      await apiPost('/api/llm/active', { action: 'activate', id });
+      onChanged();
+    } catch {}
+  };
+
+  const removeProvider = async (id: string) => {
+    try {
+      await apiPost('/api/llm/active', { action: 'delete', id });
+      onChanged();
+    } catch {}
+  };
+
   return (
-    <div className="space-y-3">
-      <p className="text-xs text-muted-foreground">15 个内置 provider。在 ChatPanel 顶栏下拉选择,再输入 API key 即可使用。当前已配置 {configured.length} 个,正在使用 {active ? active : '无'}。</p>
+    <div className="space-y-4">
+      {/* 添加新 provider */}
+      <div className="space-y-2 rounded-md border border-border bg-card p-3">
+        <h3 className="text-xs font-medium text-foreground">添加 LLM</h3>
+        <div className="grid grid-cols-2 gap-2">
+          <select
+            value={presetId}
+            onChange={(e) => { setPresetId(e.target.value); setModel(''); }}
+            className="h-8 rounded-md border border-input bg-transparent px-2 text-xs"
+          >
+            <option value="">选厂商...</option>
+            {presets.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+          <select
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
+            disabled={!selectedPreset}
+            className="h-8 rounded-md border border-input bg-transparent px-2 text-xs disabled:opacity-50"
+          >
+            <option value="">{selectedPreset?.defaultModel || '默认模型'}</option>
+            {(selectedPreset?.availableModels || []).map((m: string) => <option key={m} value={m}>{m}</option>)}
+          </select>
+        </div>
+        <Input
+          type="password"
+          value={apiKey}
+          onChange={(e) => setApiKey(e.target.value)}
+          placeholder="粘贴 API key..."
+          className="font-mono text-xs"
+        />
+        <div className="flex items-center gap-2">
+          <Button size="sm" onClick={addProvider} disabled={saving}>
+            {saving ? '添加中...' : '添加并激活'}
+          </Button>
+          <span className="text-xs text-muted-foreground">{msg}</span>
+        </div>
+      </div>
+
+      {/* 已配置列表 */}
       <div className="space-y-1.5">
-        {providers.map((p: any) => {
-          const isConfigured = configured.includes(p.id);
-          return (
-            <div key={p.id} className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-xs">
-              <span className="font-medium">{p.name}</span>
-              <span className="text-[10px] text-muted-foreground">{p.baseUrl || '(自定义)'}</span>
-              <span className="ml-auto text-[10px] text-muted-foreground">{p.region}</span>
-              {isConfigured && <span className="rounded bg-green-500/10 px-1.5 py-0.5 text-[10px] text-green-600">已配置</span>}
-              {active === p.id && <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary">使用中</span>}
-            </div>
-          );
-        })}
+        <h3 className="text-xs font-medium text-foreground">已配置 ({configured.length})</h3>
+        {configured.length === 0 && <p className="text-xs text-muted-foreground">还没配置任何 LLM,先在上面添加一个。</p>}
+        {configured.map((p: any) => (
+          <div key={p.id} className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-xs">
+            <span className="font-medium">{p.name}</span>
+            <span className="text-[10px] text-muted-foreground">{p.model}</span>
+            {active === p.id ? (
+              <span className="ml-auto rounded bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary">使用中</span>
+            ) : (
+              <Button size="sm" variant="ghost" className="ml-auto h-6 px-2 text-[10px]" onClick={() => activate(p.id)}>激活</Button>
+            )}
+            <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px] text-destructive" onClick={() => removeProvider(p.id)}>删除</Button>
+          </div>
+        ))}
       </div>
     </div>
   );
