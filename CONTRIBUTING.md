@@ -6,6 +6,8 @@
 >
 > 接手前先读 [./HANDOFF.md](./HANDOFF.md) + [./docs/CODE_STATUS.md](./docs/CODE_STATUS.md)。
 
+> 🤖 **如果你是 AI Agent** —— 还需读 [./CONTRIBUTING_AI.md](./CONTRIBUTING_AI.md),里面是针对 WebPilot 的 AI 协作规范(约束前置复述 / DEVIATIONS.md / Chrome 124+ 已知坑 / 不静默简化)。
+
 ---
 
 ## 📋 前置
