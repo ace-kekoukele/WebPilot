@@ -8,8 +8,44 @@
 
 ### `GET /api/health`
 检查 daemon 健康状态。
+
+**增强响应 (v4.0.5+):**
 ```json
-{ "ok": true, "version": "4.0.4", "cdp": "connected" }
+{
+  "ok": true,
+  "name": "WebPilot",
+  "version": "4.0.4",
+  "protocolVersion": "1.0",
+  "cdpConnected": true,
+  "toolCount": 75,
+  "uptime": 3600,
+  "ports": {
+    "cdp": 9222,
+    "mcp": 9223,
+    "http": 9224,
+    "control": 9225,
+    "sse": 9226,
+    "webhook": 9227
+  },
+  "memory": {
+    "heapUsed": 45,
+    "heapTotal": 128,
+    "rss": 89
+  },
+  "nodeVersion": "v22.0.0",
+  "platform": "win32",
+  "plugins": {
+    "status": {
+      "available": ["core-browser", "core-network", ...],
+      "loaded": ["core-browser", "core-network", ...],
+      "tools": { "loaded": [...], "total": 75 }
+    },
+    "validation": {
+      "core-browser": { "total": 8, "missing": [], "ok": true },
+      ...
+    }
+  }
+}
 ```
 
 ### `GET /api/repair`

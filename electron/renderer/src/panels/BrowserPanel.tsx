@@ -1,6 +1,6 @@
 // src/panels/BrowserPanel.tsx — 浏览器模式 (URL 导航 + 真预览 + tab 列表 + 3 按钮)
 import { useState, useEffect } from 'react';
-import { Globe, Crosshair, ArrowRight, RefreshCw, ImageIcon, User, Bot, Camera, FileCode, ListTree, Cookie, type LucideIcon } from 'lucide-react';
+import { Globe, Crosshair, ArrowRight, RefreshCw, ImageIcon, User, Bot, Camera, FileCode, ListTree, Cookie, Copy, ExternalLink, type LucideIcon } from 'lucide-react';
 import { apiGet, apiPost } from '../lib/api';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -9,6 +9,9 @@ import { EmptyState } from '../components/empty-state';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs';
 import { pushToast } from '../components/Toast';
 import { useAppStore } from '../store';
+import { useClipboard } from '../hooks';
+import { useDebounce } from '../hooks';
+import { cn } from '../lib/cn';
 
 interface Props { tools: any[]; }
 
@@ -23,7 +26,22 @@ export function BrowserPanel({ tools }: Props) {
   const [picking, setPicking] = useState(false);
   const [cookies, setCookies] = useState<any[]>([]);
   const [cookiesLoading, setCookiesLoading] = useState(false);
+  const [hoveredTab, setHoveredTab] = useState<string | null>(null);
+  const [selectedTab, setSelectedTab] = useState<any>(null);
   const health = useAppStore((s) => s.health);
+  const { copy, copied } = useClipboard();
+
+  // URL 防抖验证
+  const debouncedUrl = useDebounce(url, 300);
+  const [urlValid, setUrlValid] = useState(true);
+  useEffect(() => {
+    try {
+      new URL(url.startsWith('http') ? url : 'https://' + url);
+      setUrlValid(true);
+    } catch {
+      setUrlValid(url.length === 0 || url === 'about:blank');
+    }
+  }, [debouncedUrl]);
 
   const refreshTabs = async () => {
     try {
@@ -159,14 +177,29 @@ export function BrowserPanel({ tools }: Props) {
       {/* URL bar */}
       <div className="flex gap-2">
         <div className="relative flex-1">
-          <Globe className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Globe className={cn(
+            "pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2",
+            urlValid ? "text-muted-foreground" : "text-destructive"
+          )} />
           <Input
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && navigate()}
             placeholder="输入 URL, 回车导航..."
-            className="pl-8 font-mono text-xs"
+            className={cn(
+              "pl-8 pr-8 font-mono text-xs",
+              !urlValid && url.length > 0 && "border-destructive focus-visible:ring-destructive"
+            )}
           />
+          {/* URL 验证图标 */}
+          {url.length > 0 && (
+            <div className={cn(
+              "pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-medium",
+              urlValid ? "text-success" : "text-destructive"
+            )}>
+              {urlValid ? '✓' : '✗'}
+            </div>
+          )}
         </div>
         <Button size="sm" onClick={navigate} disabled={busy} className="gap-1.5">
           <ArrowRight className="h-3.5 w-3.5" />
@@ -292,15 +325,43 @@ function TabList({ loading, tabs, icon: Icon, label, empty }: { loading: boolean
   }
   return (
     <div className="space-y-1 p-2">
-      {tabs.map((t) => (
-        <div key={t.targetId || t.id} className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-xs">
-          <Icon className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
-          <div className="min-w-0 flex-1 truncate">
-            <div className="truncate font-medium text-foreground">{(t.title || t.url || 'Tab').slice(0, 60)}</div>
-            <div className="truncate text-muted-foreground">{t.url}</div>
+      {tabs.map((t) => {
+        const tabUrl = t.url || '';
+        return (
+          <div
+            key={t.targetId || t.id}
+            className="group relative flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-xs transition-all hover:border-primary/50 hover:bg-accent/50"
+          >
+            <Icon className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
+            <div className="min-w-0 flex-1 cursor-pointer" onClick={() => {
+              // Click tab to copy URL
+              navigator.clipboard.writeText(tabUrl).catch(() => {});
+            }}>
+              <div className="truncate font-medium text-foreground hover:text-primary">{(t.title || tabUrl || 'Tab').slice(0, 60)}</div>
+              <div className="truncate text-muted-foreground hover:text-primary/70">{tabUrl}</div>
+            </div>
+            {/* Action buttons on hover */}
+            <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+              <button
+                onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(tabUrl).catch(() => {}); }}
+                className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-foreground"
+                title="复制 URL"
+              >
+                <Copy className="h-3 w-3" />
+              </button>
+              {tabUrl && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); window.open(tabUrl, '_blank'); }}
+                  className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-foreground"
+                  title="在浏览器打开"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                </button>
+              )}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
