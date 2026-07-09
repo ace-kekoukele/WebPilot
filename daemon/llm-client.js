@@ -7,11 +7,62 @@
 import { randomUUID } from 'node:crypto';
 import { EventEmitter } from 'node:events';
 
-// ──── 配置加载: 从 ~/.webpilot/llm-providers.json 读 ────────────
-// 格式: { activeId: "openai-international", providers: [{ id, name, baseUrl, apiKey, model, type }] }
+// ──── API Key 加密 (本机安全存储) ───────────────────────────────
+// 用 Node.js crypto + OS 特征派生 AES-256-GCM 密钥
+// 加密后格式: base64(iv:ciphertext:authTag) — 完整密文
 import { existsSync, readFileSync, writeFileSync, mkdirSync, promises as fs } from 'node:fs';
 import path from 'node:path';
+import { createCipheriv, createDecipheriv, randomBytes, createHash } from 'node:crypto';
 import { getConfigDir } from './config.js';
+
+// 派生密钥: 用用户名+机器名做 HKDF-like 拉伸
+let _derivedKey = null;
+function getDerivedKey() {
+  if (_derivedKey) return _derivedKey;
+  const userInfo = `${process.env.USERNAME || 'user'}-${process.env.COMPUTERNAME || 'host'}-webpilot-v4`;
+  _derivedKey = createHash('sha256').update(userInfo).digest(); // 32 bytes
+  return _derivedKey;
+}
+
+// 标记: 加密字段的前缀 (明文改密文时写这个标记,用于迁移检测)
+const ENCRYPTED_PREFIX = '__wp_enc:';
+// 标记: 空/null key
+const EMPTY_MARKER = '__wp_empty__';
+
+function encryptApiKey(plain) {
+  if (!plain) return EMPTY_MARKER;
+  const iv = randomBytes(12); // 96-bit IV for GCM
+  const key = getDerivedKey();
+  const cipher = createCipheriv('aes-256-gcm', key, iv);
+  const encrypted = Buffer.concat([cipher.update(plain, 'utf8'), cipher.final()]);
+  const authTag = cipher.getAuthTag();
+  return ENCRYPTED_PREFIX + Buffer.concat([iv, authTag, encrypted]).toString('base64');
+}
+
+function decryptApiKey(encrypted) {
+  if (!encrypted) return '';
+  if (encrypted === EMPTY_MARKER) return '';
+  if (!encrypted.startsWith(ENCRYPTED_PREFIX)) {
+    // 旧明文 — 直接返回 (向后兼容)
+    return encrypted;
+  }
+  try {
+    const data = Buffer.from(encrypted.slice(ENCRYPTED_PREFIX.length), 'base64');
+    const iv = data.slice(0, 12);
+    const authTag = data.slice(12, 28);
+    const ciphertext = data.slice(28);
+    const key = getDerivedKey();
+    const decipher = createDecipheriv('aes-256-gcm', key, iv);
+    decipher.setAuthTag(authTag);
+    return decipher.update(ciphertext) + decipher.final('utf8');
+  } catch {
+    return ''; // 解密失败返回空(会触发重新输入 key)
+  }
+}
+
+// ──── 配置加载: 从 ~/.webpilot/llm-providers.json 读 ────────────
+// 格式: { activeId: "openai-international", providers: [{ id, name, baseUrl, apiKey, model, type }] }
+// apiKey 在文件里是加密存储的,loadLLMConfig 返回解密后明文供内存使用
 
 function configFile() { return path.join(getConfigDir(), 'llm-providers.json'); }
 
@@ -20,15 +71,37 @@ export function loadLLMConfig() {
   if (_config) return _config;
   try {
     const p = configFile();
-    if (existsSync(p)) _config = JSON.parse(readFileSync(p, 'utf8'));
-    else _config = { activeId: null, providers: [] };
+    if (existsSync(p)) {
+      const raw = JSON.parse(readFileSync(p, 'utf8'));
+      // 解密所有 provider 的 apiKey (向后兼容明文)
+      _config = {
+        ...raw,
+        providers: (raw.providers || []).map((prov) => ({
+          ...prov,
+          apiKey: decryptApiKey(prov._encryptedKey || prov.apiKey),
+          _encryptedKey: prov._encryptedKey || prov.apiKey, // 保留密文用于保存
+        })),
+      };
+    } else {
+      _config = { activeId: null, providers: [] };
+    }
   } catch { _config = { activeId: null, providers: [] }; }
   return _config;
 }
+
 export function saveLLMConfig(cfg) {
   _config = cfg;
   try { mkdirSync(getConfigDir(), { recursive: true }); } catch {}
-  writeFileSync(configFile(), JSON.stringify(cfg, null, 2));
+  // 写文件时: apiKey 字段为空字符串(不在磁盘留明文),_encryptedKey 存密文
+  const toSave = {
+    ...cfg,
+    providers: (cfg.providers || []).map((prov) => {
+      const plain = prov.apiKey || '';
+      const encrypted = plain ? encryptApiKey(plain) : encryptApiKey('');
+      return { ...prov, apiKey: '', _encryptedKey: encrypted };
+    }),
+  };
+  writeFileSync(configFile(), JSON.stringify(toSave, null, 2));
 }
 export function getActiveProvider() {
   const cfg = loadLLMConfig();
