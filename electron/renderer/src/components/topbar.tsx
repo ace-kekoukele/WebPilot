@@ -1,9 +1,11 @@
 // src/components/topbar.tsx — 44px 顶栏, backdrop-blur, lucide 图标按钮
-import { Sun, Moon, Command, HelpCircle, Wrench, Plug, FileText } from 'lucide-react';
+// 增强: 健康状态指示器 + 实时统计
+import { Sun, Moon, Command, HelpCircle, Wrench, Plug, FileText, Wifi, WifiOff, Activity } from 'lucide-react';
 import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { useState } from 'react';
 import { apiGet } from '../lib/api';
+import { useAppStore } from '../store';
 
 interface Props {
   theme: 'dark' | 'light';
@@ -17,6 +19,8 @@ interface Props {
 export function TopBar({ theme, onToggleTheme, onOpenPalette, onOpenHelp, onOpenRepair, onOpenSettings }: Props) {
   const [logOpen, setLogOpen] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
+  const health = useAppStore((s) => s.health);
+  const activity = useAppStore((s) => s.activity);
 
   const openLogs = async () => {
     try {
@@ -27,13 +31,43 @@ export function TopBar({ theme, onToggleTheme, onOpenPalette, onOpenHelp, onOpen
     } catch { setLogs([]); }
     setLogOpen(true);
   };
+
+  const recentOk = activity.filter((e: any) => e.ok).length;
+  const recentTotal = activity.length;
+  const uptime = health?.uptime ? `${Math.floor((health.uptime as number) / 1000)}s` : null;
+
   return (
     <TooltipProvider delayDuration={300}>
       <header className="flex h-11 items-center justify-between border-b border-border bg-background/80 px-3 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="flex items-center gap-2">
+        {/* 左侧: Logo + 版本 + 状态 */}
+        <div className="flex items-center gap-3">
           <span className="text-sm font-semibold tracking-tight">WebPilot</span>
           <span className="rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground">v4.0.4</span>
+          {/* 健康状态指示器 */}
+          <div className="flex items-center gap-1.5">
+            {health?.cdpConnected ? (
+              <span className="flex items-center gap-1 text-[10px] text-success">
+                <Wifi className="h-3 w-3" />
+                <span className="hidden sm:inline">Chrome 已连接</span>
+              </span>
+            ) : (
+              <span className="flex items-center gap-1 text-[10px] text-destructive">
+                <WifiOff className="h-3 w-3" />
+                <span className="hidden sm:inline">Chrome 未连接</span>
+              </span>
+            )}
+          </div>
+          {/* 实时统计 */}
+          {recentTotal > 0 && (
+            <div className="hidden md:flex items-center gap-1.5 text-[10px] text-muted-foreground">
+              <Activity className="h-3 w-3" />
+              <span>{recentOk}/{recentTotal}</span>
+              {uptime && <span className="text-muted-foreground/60">· {uptime}</span>}
+            </div>
+          )}
         </div>
+
+        {/* 右侧: 工具按钮 */}
         <div className="flex items-center gap-1">
           <Tooltip>
             <TooltipTrigger asChild>
@@ -86,7 +120,7 @@ export function TopBar({ theme, onToggleTheme, onOpenPalette, onOpenHelp, onOpen
         </div>
       </header>
 
-      {/* B2-23: 日志弹窗 */}
+      {/* 日志弹窗 */}
       {logOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setLogOpen(false)}>
           <div className="max-h-[70vh] w-[700px] rounded-lg border border-border bg-background shadow-xl" onClick={(e) => e.stopPropagation()}>
@@ -95,8 +129,14 @@ export function TopBar({ theme, onToggleTheme, onOpenPalette, onOpenHelp, onOpen
               <Button size="sm" variant="ghost" className="h-6 text-xs" onClick={() => setLogOpen(false)}>关闭</Button>
             </div>
             <div className="max-h-[60vh] overflow-auto p-3">
-              <p className="text-xs text-muted-foreground">日志路径: %LOCALAPPDATA%\WebPilot\logs\</p>
-              <p className="mt-1 text-xs text-muted-foreground">完整日志请用文件管理器打开上述路径</p>
+              {logs.length === 0 ? (
+                <p className="text-xs text-muted-foreground">暂无日志</p>
+              ) : (
+                <div className="space-y-1 font-mono text-xs">
+                  {logs.map((l, i) => <div key={i} className="text-foreground/80">{l}</div>)}
+                </div>
+              )}
+              <p className="mt-3 border-t border-border pt-2 text-xs text-muted-foreground">日志路径: %LOCALAPPDATA%\WebPilot\logs\</p>
             </div>
           </div>
         </div>
