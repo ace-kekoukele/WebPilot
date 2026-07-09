@@ -10,7 +10,6 @@
       "experimental": "实验性，功能不稳定"
     }
   },
-
   "browser_navigate": {
     "status": "complete",
     "severity": "P0",
@@ -60,13 +59,6 @@
     "fix": "已修复（v4.0.4 WEBPILOT_MODIFICATION_GUIDE）",
     "lastReviewed": "2026-07-09"
   },
-  "browser_screenshot": {
-    "status": "complete",
-    "severity": "P0",
-    "reason": "Page.captureScreenshot 完整实现，支持 format/quality/clip",
-    "fix": "已实现",
-    "lastReviewed": "2026-07-09"
-  },
   "browser_dom_snapshot": {
     "status": "complete",
     "severity": "P1",
@@ -81,46 +73,11 @@
     "fix": "已实现（v4.0.4 B1-9）",
     "lastReviewed": "2026-07-09"
   },
-  "browser_cookies_get": {
-    "status": "complete",
-    "severity": "P1",
-    "reason": "Network.getCookies 完整实现",
-    "fix": "已实现（v4.0.4 B3-30）",
-    "lastReviewed": "2026-07-09"
-  },
-  "browser_cookies_set": {
-    "status": "complete",
-    "severity": "P1",
-    "reason": "Network.setCookie 完整实现",
-    "fix": "已实现（v4.0.4 B3-30）",
-    "lastReviewed": "2026-07-09"
-  },
-  "browser_cookies_delete": {
-    "status": "complete",
-    "severity": "P1",
-    "reason": "Network.deleteCookies 完整实现",
-    "fix": "已实现（v4.0.4 B3-30）",
-    "lastReviewed": "2026-07-09"
-  },
   "browser_network": {
     "status": "complete",
     "severity": "P0",
     "reason": "daemon network-store 已接入，SSE 流式推送，详情/重放/拦截全实现",
     "fix": "已实现（v4.0.4 B2-17）",
-    "lastReviewed": "2026-07-09"
-  },
-  "browser_recorder_start": {
-    "status": "complete",
-    "severity": "P1",
-    "reason": "Page.startRecording + Overlay.types/Input.dispatchMouseEvent 回放已实现",
-    "fix": "已实现（v4.0.4 B2-16）",
-    "lastReviewed": "2026-07-09"
-  },
-  "browser_recorder_stop": {
-    "status": "complete",
-    "severity": "P1",
-    "reason": "Page.stopRecording 完整实现",
-    "fix": "已实现（v4.0.4 B2-16）",
     "lastReviewed": "2026-07-09"
   },
   "browser_debugger": {
@@ -144,20 +101,6 @@
     "fix": "已实现（v4.0.4 B3-33）",
     "lastReviewed": "2026-07-09"
   },
-  "browser_heap_snapshot": {
-    "status": "partial",
-    "severity": "P2",
-    "reason": "HeapProfiler.takeSnapshot 基础可用，详细分析未实现",
-    "fix": "部分实现",
-    "lastReviewed": "2026-07-09"
-  },
-  "browser_cdp_command": {
-    "status": "complete",
-    "severity": "P1",
-    "reason": "sendCommand 通用调用，熔断器已接入",
-    "fix": "已实现（v4.0.4 CircuitBreaker）",
-    "lastReviewed": "2026-07-09"
-  },
   "browser_extract_apis": {
     "status": "partial",
     "severity": "P2",
@@ -179,73 +122,416 @@
     "fix": "部分实现",
     "lastReviewed": "2026-07-09"
   },
-  "browser_dom_get_attributes": {
+  "browser_a11y": {
     "status": "complete",
-    "severity": "P1",
-    "reason": "Runtime.callFunctionOn + element attribute 读取完整实现",
+    "severity": "P2",
+    "reason": "无障碍树查询 + 元素 a11y 属性 (Chrome 150 Accessibility 域)",
     "fix": "已实现",
     "lastReviewed": "2026-07-09"
   },
-  "browser_input": {
+  "browser_action": {
     "status": "complete",
-    "severity": "P0",
-    "reason": "Input.dispatchKeyEvent + mouseEvent 完整实现",
+    "severity": "P2",
+    "reason": "页面交互: click / fill / type / hover",
     "fix": "已实现",
     "lastReviewed": "2026-07-09"
   },
-  "browser_go_back": {
+  "browser_animation": {
     "status": "complete",
-    "severity": "P1",
-    "reason": "Navigation.navigate 完整实现",
+    "severity": "P2",
+    "reason": "CSS 动画控制: 播放/暂停/速度/查询",
     "fix": "已实现",
     "lastReviewed": "2026-07-09"
   },
-  "browser_go_forward": {
+  "browser_audits": {
     "status": "complete",
-    "severity": "P1",
-    "reason": "Navigation.navigate 完整实现",
+    "severity": "P2",
+    "reason": "Performance/SEO/Accessibility 审计 (Chrome 150 Audits 域)",
     "fix": "已实现",
     "lastReviewed": "2026-07-09"
   },
-  "browser_reload": {
+  "browser_cache_storage": {
     "status": "complete",
-    "severity": "P1",
-    "reason": "Navigation.reload 完整实现",
+    "severity": "P2",
+    "reason": "Cache Storage 管理: 列出 cache / entries / 删除 (Chrome 150 CacheStorage 域)",
     "fix": "已实现",
     "lastReviewed": "2026-07-09"
   },
-  "browser_close": {
+  "browser_close_tab": {
+    "status": "partial",
+    "severity": "P2",
+    "reason": "关闭标签页",
+    "fix": "部分实现，代码量较少",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_connect": {
+    "status": "partial",
+    "severity": "P2",
+    "reason": "连接 Chrome CDP",
+    "fix": "部分实现，代码量较少",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_console": {
     "status": "complete",
-    "severity": "P1",
-    "reason": "Page.close 完整实现",
+    "severity": "P2",
+    "reason": "Enable Console.log 监听 (CDP Console.enable)",
     "fix": "已实现",
     "lastReviewed": "2026-07-09"
   },
-  "browser_create_target": {
+  "browser_console_log": {
     "status": "complete",
-    "severity": "P1",
-    "reason": "Target.createTarget 完整实现",
+    "severity": "P2",
+    "reason": "Console 拦截 + 严重性过滤 (Chrome 150 Log 域)",
     "fix": "已实现",
     "lastReviewed": "2026-07-09"
   },
-  "browser_list_targets": {
+  "browser_cookies": {
     "status": "complete",
-    "severity": "P0",
-    "reason": "Target.getTargets 完整实现，daemon 启动时自动获取",
+    "severity": "P2",
+    "reason": "Browser-level Cookie 管理 (get/set/clear)",
     "fix": "已实现",
     "lastReviewed": "2026-07-09"
   },
-  "browser_close_target": {
+  "browser_css": {
     "status": "complete",
-    "severity": "P1",
-    "reason": "Target.closeTarget 完整实现",
+    "severity": "P2",
+    "reason": "CSS 操作: getComputedStyle + stylesheet 读取",
     "fix": "已实现",
     "lastReviewed": "2026-07-09"
   },
-  "browser_activate_target": {
+  "browser_css_coverage": {
     "status": "complete",
-    "severity": "P1",
-    "reason": "Target.activateTarget 完整实现",
+    "severity": "P2",
+    "reason": "CSS 覆盖率: 找出未使用的 CSS 规则 (Chrome 150 CSSCoverage)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_debugger_remove": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "移除断点 (alias of browser_debugger remove)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_debugger_resume": {
+    "status": "partial",
+    "severity": "P2",
+    "reason": "Resume paused execution",
+    "fix": "部分实现，代码量较少",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_debugger_select_frame": {
+    "status": "partial",
+    "severity": "P2",
+    "reason": "Debugger.setAsyncCallStackDepth + Page frame select",
+    "fix": "部分实现，代码量较少",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_dialog": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "预设置弹窗处理 (accept/dismiss/clear) — 弹窗后自动应用",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_disconnect": {
+    "status": "partial",
+    "severity": "P2",
+    "reason": "断开 Chrome CDP 连接",
+    "fix": "部分实现，代码量较少",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_doctor": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "健康检查: Chrome CDP + 版本 + Node",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_dom": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "Document object model operations: querySelector, querySelectorAll",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_dom_breakpoint": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "DOM 修改断点: 子树/属性/节点删除时暂停 (Chrome 150 DOMDebugger 增强)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_drag": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "拖拽 (mouse.move + drag)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_dump_js": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "提取 window.* 全局 / inline scripts / 函数 (§3.5.1 前端逆向)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_dump_structure": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "提取页面结构 + 表单 + 链接 + meta + 入口点 (§3.5.1 前端逆向)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_emulation": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "设备/网络/UA 模拟",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_fill_form": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "批量填充多字段表单",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_headless": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "新 Headless 模式控制: beginFrame/Screenshot (Chrome 150 HeadlessExperimental 域)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_health": {
+    "status": "partial",
+    "severity": "P2",
+    "reason": "检查 Chrome CDP 连接 + 列 tabs",
+    "fix": "部分实现，代码量较少",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_heap": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "Heap snapshot: snapshot/summary",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_heap_retainers": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "查找指定节点的 retainers (简化: 基于 .heapsnapshot JSON)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_heap_retaining_paths": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "查找 GC root → nodeName 的保留路径 (简化)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_heap_summary": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "读取 .heapsnapshot 返回摘要",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_hover": {
+    "status": "partial",
+    "severity": "P2",
+    "reason": "Hover element via mouseMoved",
+    "fix": "部分实现，代码量较少",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_indexeddb": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "IndexedDB 高级操作: list databases/stores/get all (Chrome 150 IndexedDB 域)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_install": {
+    "status": "partial",
+    "severity": "P2",
+    "reason": "插件安装状态",
+    "fix": "部分实现，代码量较少",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_intercept": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "Fetch 拦截 — 启用/禁用 拦截指定 URL pattern",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_js_heap_node": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "找 JS 对象的 GC root + 引用链 (Chrome 150 HeapProfiler)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_layer_tree": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "图层树查询: 合成层 + 性能调试 (Chrome 150 LayerTree 域)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_list_tabs": {
+    "status": "partial",
+    "severity": "P2",
+    "reason": "列出 Chrome 标签页 (alias of browser_tabs list)",
+    "fix": "部分实现，代码量较少",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_memory": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "内存状态查询 + 压力模拟 (Chrome 150 Memory 域)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_network_get": {
+    "status": "partial",
+    "severity": "P2",
+    "reason": "查 network request 详情",
+    "fix": "部分实现，代码量较少",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_new_tab": {
+    "status": "partial",
+    "severity": "P2",
+    "reason": "创建新标签页",
+    "fix": "部分实现，代码量较少",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_overlay": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "DOM Overlay 控制: 高亮/查询布局 (Chrome 150 Overlay 域)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_press_key": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "按单个键 (Enter/Tab/Escape/...)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_request_blocking": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "屏蔽 URL 模式 (Network.blockedUrls) (Chrome 150 Network 域增强)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_request_initiator": {
+    "status": "partial",
+    "severity": "P2",
+    "reason": "查 network request 的发起者信息",
+    "fix": "部分实现，代码量较少",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_resize": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "调整 viewport 大小",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_script": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "页面加载的脚本源码操作 (list/get/search)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_security": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "安全状态查询: HTTPS/证书/不安全内容 (Chrome 150 Security 域)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_service_worker": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "Service Worker 管理: 列表/停止/取消注册 (Chrome 150)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_set_enabled": {
+    "status": "partial",
+    "severity": "P2",
+    "reason": "开启/关闭 browser-bridge 插件",
+    "fix": "部分实现，代码量较少",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_setup": {
+    "status": "partial",
+    "severity": "P2",
+    "reason": "初始化检查 (Chrome + port + tools)",
+    "fix": "部分实现，代码量较少",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_snapshot": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "获取页面的 accessibility tree (accessibleName + role)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_state": {
+    "status": "partial",
+    "severity": "P2",
+    "reason": "Bridge 内部状态 (connected/tabs/pending)",
+    "fix": "部分实现，代码量较少",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_tabs": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "管理 Chrome 标签页: list / open / close",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_target": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "Target attach/detach/send-command (iframe / SW / OOP)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_upload": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "通过 <input type=file> 上传文件",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_wait": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "轮询等待页面 JavaScript 条件为 true",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_wait_for": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "Wait for element by CSS selector / text content",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_xhr_break": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "XHR/fetch 断点 (按 URL pattern)",
     "fix": "已实现",
     "lastReviewed": "2026-07-09"
   }
