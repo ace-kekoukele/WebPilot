@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- WebPilot app icon v4.0.3: 绿点 (用户浏览器) + 紫点 (AI 助手) + 紫拱弧 (桥 = primary) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="112" fill="#FAFAF9"/>
+  <rect x="1" y="1" width="510" height="510" rx="111" fill="none" stroke="#E8E6DC" stroke-width="2"/>
+
+  <path d="M 128 286 Q 256 200 384 286"
+        stroke="#6366F1"
+        stroke-width="36"
+        stroke-linecap="round"
+        fill="none"/>
+
+  <circle cx="128" cy="286" r="48" fill="#10B981"/>
+  <circle cx="128" cy="286" r="68" stroke="#10B981" stroke-width="8" fill="none" opacity="0.18"/>
+
+  <circle cx="384" cy="286" r="48" fill="#8B5CF6"/>
+  <circle cx="384" cy="286" r="68" stroke="#8B5CF6" stroke-width="8" fill="none" opacity="0.22"/>
+</svg>

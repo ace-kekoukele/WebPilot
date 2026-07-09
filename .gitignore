@@ -15,3 +15,12 @@ coverage/
 Thumbs.db
 *.bak
 *.swp
+
+# Electron build output (NSIS installer + win-unpacked runtime)
+dist/
+dist2/
+dist3/
+dist_old/
+
+# Vite renderer build output
+electron/renderer/dist/

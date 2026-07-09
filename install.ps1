@@ -145,39 +145,67 @@ if (-not (Test-Path $StartMenuDir)) {
   New-Item -ItemType Directory -Path $StartMenuDir -Force | Out-Null
 }
 
-$startBat = Join-Path $StartMenuDir '启动 WebPilot.bat'
-$startScript = @"
+$ws = New-Object -ComObject WScript.Shell
+
+# 优先检测 Electron 桌面应用 (.exe),有的话建快捷指向它 (Mac 级体验)
+$exePath = Join-Path $InstallDir 'dist\win-unpacked\WebPilot.exe'
+$useElectron = $false
+if (Test-Path $exePath) {
+  $useElectron = $true
+  Write-Host '[OK] 检测到 Electron 桌面应用 — 快捷方式指向 .exe' -ForegroundColor Green
+
+  $desktopLnk = Join-Path ([Environment]::GetFolderPath('Desktop')) 'WebPilot.lnk'
+  $sc = $ws.CreateShortcut($desktopLnk)
+  $sc.TargetPath = $exePath
+  $sc.WorkingDirectory = $InstallDir
+  $sc.IconLocation = "$exePath,0"
+  $sc.Description = "WebPilot — 让 AI 助手操作你的浏览器 (v4.0.3 桌面应用)"
+  $sc.Save()
+  Write-Host '[OK] 桌面 WebPilot.lnk 已创建 (指向 .exe)' -ForegroundColor Green
+
+  $startMenuLnk = Join-Path $StartMenuDir 'WebPilot.lnk'
+  $sc2 = $ws.CreateShortcut($startMenuLnk)
+  $sc2.TargetPath = $exePath
+  $sc2.WorkingDirectory = $InstallDir
+  $sc2.IconLocation = "$exePath,0"
+  $sc2.Save()
+} else {
+  Write-Host '[*] 没检测到 Electron .exe — 降级到 Node daemon 模式' -ForegroundColor Yellow
+
+  $startBat = Join-Path $StartMenuDir '启动 WebPilot.bat'
+  $startScript = @"
 @echo off
 cd /d "$InstallDir"
 start "WebPilot" node daemon/main.js
 "@
-Set-Content -Path $startBat -Value $startScript -Encoding ASCII -Force
+  Set-Content -Path $startBat -Value $startScript -Encoding ASCII -Force
 
-# 桌面快捷
-$ws = New-Object -ComObject WScript.Shell
-$daemonLnk = Join-Path ([Environment]::GetFolderPath('Desktop')) '启动 WebPilot.lnk'
-$sc = $ws.CreateShortcut($daemonLnk)
-$sc.TargetPath = $startBat
-$sc.WorkingDirectory = $InstallDir
-$sc.IconLocation = "$InstallDir\node.exe,0"
-$sc.Description = "启动 WebPilot daemon (MCP 9223 + HTTP 9224)"
-$sc.Save()
-Write-Host '[OK] 桌面 启动 WebPilot.lnk 已创建' -ForegroundColor Green
+  $daemonLnk = Join-Path ([Environment]::GetFolderPath('Desktop')) '启动 WebPilot.lnk'
+  $sc = $ws.CreateShortcut($daemonLnk)
+  $sc.TargetPath = $startBat
+  $sc.WorkingDirectory = $InstallDir
+  $sc.IconLocation = "$InstallDir\node.exe,0"
+  $sc.Description = "启动 WebPilot daemon (MCP 9223 + HTTP 9224)"
+  $sc.Save()
+  Write-Host '[OK] 桌面 启动 WebPilot.lnk 已创建 (指向 daemon)' -ForegroundColor Green
 
-# GUI URL 快捷
-$guiLnk = Join-Path ([Environment]::GetFolderPath('Desktop')) 'WebPilot 控制台.url'
-"[InternetShortcut]`nURL=http://127.0.0.1:9224/" | Set-Content -Path $guiLnk -Encoding ASCII -Force
-Write-Host '[OK] 桌面 WebPilot 控制台.url 已创建' -ForegroundColor Green
+  # GUI URL 快捷 (Node 模式下无桌面应用,只能浏览器开)
+  $guiLnk = Join-Path ([Environment]::GetFolderPath('Desktop')) 'WebPilot 控制台.url'
+  "[InternetShortcut]`nURL=http://127.0.0.1:9224/" | Set-Content -Path $guiLnk -Encoding ASCII -Force
+  Write-Host '[OK] 桌面 WebPilot 控制台.url 已创建' -ForegroundColor Green
+}
 
 Pop-Location
 
 Write-Host ''
 Write-Host '=== 安装完成 ===' -ForegroundColor Green
 Write-Host ''
-Write-Host '接下来 3 步:' -ForegroundColor Cyan
+Write-Host '接下来 2 步:' -ForegroundColor Cyan
 Write-Host '  1. 双击桌面 "Chrome (WebPilot)" 启动 Chrome (带 debug 端口)' -ForegroundColor White
-Write-Host '  2. 双击桌面 "启动 WebPilot" 启 daemon' -ForegroundColor White
-Write-Host '  3. 双击桌面 "WebPilot 控制台" 打开 GUI' -ForegroundColor White
-Write-Host '     (或 Chrome 地址栏输入 http://127.0.0.1:9224/)' -ForegroundColor White
+if ($useElectron) {
+  Write-Host '  2. 双击桌面 "WebPilot" 启桌面应用 (窗口 + 托盘)' -ForegroundColor White
+} else {
+  Write-Host '  2. 双击桌面 "启动 WebPilot" 启 daemon,然后 "WebPilot 控制台" 打开 GUI' -ForegroundColor White
+}
 Write-Host ''
 Write-Host "卸载: 跑 .\uninstall.ps1 (或手动删 $InstallDir + 几个桌面快捷)" -ForegroundColor Yellow
