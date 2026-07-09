@@ -4,11 +4,17 @@ import { motion } from 'framer-motion';
 import { cn } from '../lib/cn';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 
-const ITEMS: Array<{ mode: 'browser' | 'chat' | 'automation' | 'monitor'; icon: LucideIcon; label: string; shortcut: string }> = [
-  { mode: 'browser', icon: Globe, label: '浏览器', shortcut: 'Ctrl+1' },
-  { mode: 'chat', icon: MessageSquare, label: '助手', shortcut: 'Ctrl+2' },
-  { mode: 'automation', icon: ListTree, label: '自动化', shortcut: 'Ctrl+3' },
-  { mode: 'monitor', icon: Activity, label: '监控', shortcut: 'Ctrl+4' },
+const ITEMS: Array<{
+  mode: 'browser' | 'chat' | 'automation' | 'monitor';
+  icon: LucideIcon;
+  label: string;
+  shortcut: string;
+  desc: string;
+}> = [
+  { mode: 'browser', icon: Globe, label: '浏览器', shortcut: 'Ctrl+1', desc: '操作 Chrome 浏览器' },
+  { mode: 'chat', icon: MessageSquare, label: '助手', shortcut: 'Ctrl+2', desc: 'AI 聊天 + 工具调用' },
+  { mode: 'automation', icon: ListTree, label: '自动化', shortcut: 'Ctrl+3', desc: '工作流 / 录制 / 模板' },
+  { mode: 'monitor', icon: Activity, label: '监控', shortcut: 'Ctrl+4', desc: '日志 / 网络 / Console' },
 ];
 
 interface Props {
@@ -45,7 +51,13 @@ export function Sidebar({ mode, onChange }: Props) {
                   <Icon className="relative h-4 w-4" strokeWidth={1.75} />
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="right">{it.label} <span className="ml-1 text-muted-foreground">{it.shortcut}</span></TooltipContent>
+              <TooltipContent side="right">
+                <div className="text-xs">
+                  <div className="font-medium">{it.label}</div>
+                  <div className="text-muted-foreground">{it.desc}</div>
+                  <div className="mt-0.5 text-[10px] text-muted-foreground/60">{it.shortcut}</div>
+                </div>
+              </TooltipContent>
             </Tooltip>
           );
         })}
