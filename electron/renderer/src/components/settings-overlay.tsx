@@ -62,8 +62,7 @@ export function SettingsOverlay({ onClose }: Props) {
         await apiPost('/api/ports', { ports: fields });
         setSaveStatus('✓ 已保存 (需重启 daemon)');
       } else if (cat === 'llm') {
-        // LLM 配置不通过此弹窗保存 (在 ChatPanel 选择 provider 即可)
-        setSaveStatus('✓ LLM 在 ChatPanel 选择');
+        setSaveStatus('✓ LLM 改动即时生效');
       } else {
         await apiPost(`/api/settings/${cat}`, { patch: fields });
         setSaveStatus('✓ 已保存');
