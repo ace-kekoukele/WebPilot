@@ -1,0 +1,54 @@
+# .github/workflows/release.yml — 自动 GitHub Release
+# 触发: 推送形如 v*.*.* 的 tag
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Extract changelog section
+        id: changelog
+        shell: bash
+        run: |
+          # 从 CHANGELOG.md 提取 tag 名的 section (兼容 ## vX.Y.Z 和 ## X.Y.Z 两种格式)
+          TAG=${GITHUB_REF#refs/tags/v}
+          # 先按 ## vX.Y.Z 找, 找不到 fallback ## X.Y.Z (本仓库格式)
+          NOTES=$(awk -v tag="## v${TAG}" '
+            $0 ~ tag { found=1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md)
+          if [ -z "$NOTES" ]; then
+            NOTES=$(awk -v tag="## ${TAG}" '
+              $0 ~ tag { found=1; next }
+              found && /^## / { exit }
+              found { print }
+            ' CHANGELOG.md)
+          fi
+          if [ -z "$NOTES" ]; then
+            NOTES="Release v${TAG}"
+          fi
+          {
+            echo "NOTES<<EOF"
+            echo "$NOTES"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: v${{ github.ref_name }}
+          body: ${{ steps.changelog.outputs.NOTES }}
+          draft: false
+          prerelease: false

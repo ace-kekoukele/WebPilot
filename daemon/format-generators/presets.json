@@ -1,0 +1,150 @@
+{
+  "_comment": "LLM 厂商预设 (用户一键填充 base_url + 默认模型). v4.0: 国内国外分别. See §17.",
+  "version": 1,
+  "presets": [
+    {
+      "id": "openai-international",
+      "name": "OpenAI (国际版)",
+      "provider": "openai-compatible",
+      "baseUrl": "https://api.openai.com/v1",
+      "defaultModel": "gpt-4o",
+      "availableModels": ["gpt-5", "gpt-4o", "gpt-4o-mini", "o1", "o3-mini"],
+      "regions": ["international"],
+      "authStyle": "bearer"
+    },
+    {
+      "id": "anthropic-international",
+      "name": "Anthropic (国际版)",
+      "provider": "anthropic",
+      "baseUrl": "https://api.anthropic.com",
+      "defaultModel": "claude-opus-4-8",
+      "availableModels": ["claude-opus-4-8", "claude-sonnet-5", "claude-haiku-4"],
+      "regions": ["international"],
+      "authStyle": "x-api-key"
+    },
+    {
+      "id": "google-gemini",
+      "name": "Google Gemini",
+      "provider": "gemini",
+      "baseUrl": "https://generativelanguage.googleapis.com/v1",
+      "defaultModel": "gemini-2.5-pro",
+      "availableModels": ["gemini-2.5-pro", "gemini-2.5-flash", "gemini-1.5-pro"],
+      "regions": ["international", "china-mirror"],
+      "authStyle": "query-key"
+    },
+    {
+      "id": "openrouter-international",
+      "name": "OpenRouter (国际版)",
+      "provider": "openai-compatible",
+      "baseUrl": "https://openrouter.ai/api/v1",
+      "defaultModel": "anthropic/claude-3.5-sonnet",
+      "availableModels": ["*"],
+      "regions": ["international"],
+      "authStyle": "bearer",
+      "_note": "OpenRouter 聚合 200+ 模型, 列出全部意义不大; 给 default 即可."
+    },
+    {
+      "id": "deepseek-international",
+      "name": "DeepSeek (国际版)",
+      "provider": "openai-compatible",
+      "baseUrl": "https://api.deepseek.com/v1",
+      "defaultModel": "deepseek-chat",
+      "availableModels": ["deepseek-chat", "deepseek-reasoner", "deepseek-coder"],
+      "regions": ["international"]
+    },
+    {
+      "id": "deepseek-china",
+      "name": "DeepSeek (国内版)",
+      "provider": "openai-compatible",
+      "baseUrl": "https://api.deepseek.com/v1",
+      "defaultModel": "deepseek-chat",
+      "availableModels": ["deepseek-chat", "deepseek-reasoner"],
+      "regions": ["china"]
+    },
+    {
+      "id": "kimi-china",
+      "name": "月之暗面 Kimi (国内版)",
+      "provider": "openai-compatible",
+      "baseUrl": "https://api.moonshot.cn/v1",
+      "defaultModel": "moonshot-v1-128k",
+      "availableModels": ["moonshot-v1-128k", "moonshot-v1-32k", "moonshot-v1-8k"],
+      "regions": ["china"]
+    },
+    {
+      "id": "kimi-international",
+      "name": "Moonshot Kimi (国际版)",
+      "provider": "openai-compatible",
+      "baseUrl": "https://api.moonshot.ai/v1",
+      "defaultModel": "moonshot-v1-128k",
+      "availableModels": ["moonshot-v1-128k"],
+      "regions": ["international"]
+    },
+    {
+      "id": "glm-china",
+      "name": "智谱 GLM (国内版)",
+      "provider": "openai-compatible",
+      "baseUrl": "https://open.bigmodel.cn/api/paas/v4",
+      "defaultModel": "glm-4-plus",
+      "availableModels": ["glm-4-plus", "glm-4-air", "glm-4-flash"],
+      "regions": ["china"]
+    },
+    {
+      "id": "qwen-china",
+      "name": "通义千问 Qwen (国内版)",
+      "provider": "openai-compatible",
+      "baseUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+      "defaultModel": "qwen-max",
+      "availableModels": ["qwen-max", "qwen-coder", "qwen-plus", "qwen-turbo"],
+      "regions": ["china"]
+    },
+    {
+      "id": "qwen-international",
+      "name": "Qwen (国际版)",
+      "provider": "openai-compatible",
+      "baseUrl": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
+      "defaultModel": "qwen-max",
+      "availableModels": ["qwen-max"],
+      "regions": ["international"]
+    },
+    {
+      "id": "m-max-domestic",
+      "name": "MiniMax (国内版)",
+      "provider": "openai-compatible",
+      "baseUrl": "https://api.MiniMax.chat/v1",
+      "defaultModel": "MiniMax-Text-01",
+      "availableModels": ["MiniMax-Text-01", "MiniMax-Text-02", "MiniMax-Reasoning-01"],
+      "regions": ["china"],
+      "_note": "国内版 (api.MiniMax.chat). 用户填 API key 后即可."
+    },
+    {
+      "id": "m-max-international",
+      "name": "MiniMax (国际版)",
+      "provider": "openai-compatible",
+      "baseUrl": "https://api.MiniMax.io/v1",
+      "defaultModel": "MiniMax-Text-01",
+      "availableModels": ["MiniMax-Text-01", "MiniMax-Text-02"],
+      "regions": ["international"],
+      "_note": "国际版 (api.MiniMax.io). 与国内版用不同的 base_url."
+    },
+    {
+      "id": "ollama-local",
+      "name": "Ollama (本地)",
+      "provider": "openai-compatible",
+      "baseUrl": "http://127.0.0.1:11434/v1",
+      "defaultModel": "qwen2.5:7b",
+      "availableModels": ["*"],
+      "regions": ["local"],
+      "_note": "Ollama 本地服务. model name 随本地安装变化, 默认给个常见值."
+    },
+    {
+      "id": "custom",
+      "name": "+ 自定义 OpenAI 兼容端点",
+      "provider": "openai-compatible",
+      "baseUrl": "",
+      "defaultModel": "",
+      "availableModels": [],
+      "regions": ["*"],
+      "_note": "用户手填 base_url + model. 兜底选项."
+    }
+  ]
+}
