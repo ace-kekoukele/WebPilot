@@ -1,0 +1,43 @@
+{
+  "name": "@webpilot/app",
+  "version": "4.0.2",
+  "description": "WebPilot — 通用 Chrome DevTools Protocol 桥。70+ 工具覆盖页面操控、网络、JS 调试、堆、WebSocket。多 Agent 自动接入 (Claude/Cursor/Hermes/Max/OpenAI/...). MCP Streamable HTTP + OpenAPI 3.0 + 桌面 GUI (用户 Chrome 打开 127.0.0.1:9224).",
+  "type": "module",
+  "main": "daemon/main.js",
+  "scripts": {
+    "check": "node --check daemon/main.js && node --check lib/*.js lib/cdp/*.js tools/*.js",
+    "test": "node --test test/unit/*.test.js",
+    "test:integration": "node --test test/integration/*.test.js",
+    "test:all": "node --test test/unit/*.test.js test/integration/*.test.js",
+    "daemon": "node daemon/main.js",
+    "daemon:ipc": "node daemon/main.js --ipc-stdio",
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "ws": "^8.21.0",
+    "zod": "^3.22.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "keywords": [
+    "cdp",
+    "chrome-devtools-protocol",
+    "browser-automation",
+    "mcp",
+    "ai-agent"
+  ],
+  "author": "WebPilot",
+  "license": "MIT",
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.7.0",
+    "@xyflow/react": "^12.11.1",
+    "electron": "^32.3.3",
+    "framer-motion": "^11.18.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "vite": "^5.4.21"
+  }
+}
