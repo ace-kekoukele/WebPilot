@@ -153,7 +153,7 @@ export function App() {
           </AnimatePresence>
         </main>
       </div>
-      <BottomDrawer open={drawerOpen} onToggle={() => setDrawerOpen((v) => !v)} onOpenRepair={openRepair} />
+      <BottomDrawer open={drawerOpen} onToggle={() => setDrawerOpen((v) => !v)} onOpenRepair={openRepair} onOpenSettings={() => setSettingsOpen(true)} />
 
       {whatsNewOpen && <WhatsNewOverlay onClose={dismissWhatsNew} />}
       {paletteOpen && <CommandPalette tools={tools} onClose={() => setPaletteOpen(false)} onToast={pushToast} onOpenRepair={openRepair} onOpenSettings={() => { setPaletteOpen(false); setSettingsOpen(true); }} onOpenHelp={() => { setPaletteOpen(false); setHelpOpen(true); }} />}

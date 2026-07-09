@@ -1,7 +1,8 @@
 // src/components/bottom-drawer.tsx — 底部抽屉 (3 micro-tabs, lucide 图标, framer-motion 220ms 弹入)
+// 增强: 快捷操作 + 历史条目点击跳转
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Activity, Network, Terminal } from 'lucide-react';
+import { ChevronDown, Activity, Network, Terminal, Wrench, Settings, RefreshCw, Zap } from 'lucide-react';
 import { cn } from '../lib/cn';
 import { Button } from './ui/button';
 import { useAppStore } from '../store';
@@ -12,11 +13,12 @@ interface Props {
   open: boolean;
   onToggle: () => void;
   onOpenRepair: () => void;
+  onOpenSettings?: () => void;
 }
 
 type Tab = 'activity' | 'network' | 'console';
 
-export function BottomDrawer({ open, onToggle }: Props) {
+export function BottomDrawer({ open, onToggle, onOpenRepair, onOpenSettings }: Props) {
   const [tab, setTab] = useState<Tab>('activity');
   const [items, setItems] = useState<any[]>([]);
   const activity = useAppStore((s) => s.activity);
@@ -36,14 +38,25 @@ export function BottomDrawer({ open, onToggle }: Props) {
     <footer className="border-t border-border bg-card/40">
       <div className="flex h-9 items-center justify-between px-3">
         <div className="flex h-full items-center gap-0.5">
-          <DrawerTab current={tab} value="activity" icon={Activity} label="事件" onClick={(v) => { setTab(v); loadItems(v); }} />
-          <DrawerTab current={tab} value="network" icon={Network} label="网络" onClick={(v) => { setTab(v); loadItems(v); }} />
-          <DrawerTab current={tab} value="console" icon={Terminal} label="Console" onClick={(v) => { setTab(v); loadItems(v); }} />
+          <DrawerTab current={tab} value="activity" icon={Activity} label="事件" badge={activity.length} onClick={(v) => { setTab(v); loadItems(v); }} />
+          <DrawerTab current={tab} value="network" icon={Network} label="网络" badge={items.length} onClick={(v) => { setTab(v); loadItems(v); }} />
+          <DrawerTab current={tab} value="console" icon={Terminal} label="Console" badge={0} onClick={(v) => { setTab(v); loadItems(v); }} />
         </div>
-        <Button variant="ghost" size="sm" onClick={onToggle} className="h-7 gap-1 text-xs text-muted-foreground">
-          {open ? '折叠' : '最近事件'}
-          <ChevronDown className={cn('h-3 w-3 transition-transform', open && 'rotate-180')} />
-        </Button>
+        <div className="flex items-center gap-1">
+          {/* 快捷操作 */}
+          {onOpenSettings && (
+            <button onClick={onOpenSettings} className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-foreground" title="设置">
+              <Settings className="h-3.5 w-3.5" />
+            </button>
+          )}
+          <button onClick={onOpenRepair} className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-foreground" title="修复">
+            <Wrench className="h-3.5 w-3.5" />
+          </button>
+          <Button variant="ghost" size="sm" onClick={onToggle} className="h-7 gap-1 text-xs text-muted-foreground">
+            {open ? '折叠' : '最近'}
+            <ChevronDown className={cn('h-3 w-3 transition-transform', open && 'rotate-180')} />
+          </Button>
+        </div>
       </div>
       <AnimatePresence>
         {open && (
@@ -69,9 +82,10 @@ interface DrawerTabProps {
   value: Tab;
   icon: typeof Activity;
   label: string;
+  badge?: number;
   onClick: (v: Tab) => void;
 }
-function DrawerTab({ current, value, icon: Icon, label, onClick }: DrawerTabProps) {
+function DrawerTab({ current, value, icon: Icon, label, badge, onClick }: DrawerTabProps) {
   const active = current === value;
   return (
     <button
@@ -83,6 +97,9 @@ function DrawerTab({ current, value, icon: Icon, label, onClick }: DrawerTabProp
     >
       <Icon className="h-3 w-3" />
       {label}
+      {badge !== undefined && badge > 0 && (
+        <span className="ml-0.5 rounded bg-muted px-1 py-0.5 text-[9px] font-medium">{badge > 99 ? '99+' : badge}</span>
+      )}
     </button>
   );
 }
@@ -93,12 +110,16 @@ function DrawerContent({ tab, activity, items }: { tab: Tab; activity: any[]; it
     return (
       <div className="space-y-0.5">
         {activity.slice(-30).reverse().map((e, i) => (
-          <div key={i} className="flex items-center gap-2 text-muted-foreground">
+          <button
+            key={i}
+            onClick={() => navigator.clipboard.writeText(`${e.agent}/${e.tool} ${JSON.stringify(e.args || {})}`).catch(() => {})}
+            className="flex w-full items-center gap-2 text-left text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+          >
             <span className={e.ok ? 'text-success' : 'text-destructive'}>{e.ok ? '✓' : '✗'}</span>
             <span className="text-foreground/70">{new Date(e.ts).toLocaleTimeString()}</span>
-            <span>{e.agent}/{e.tool}</span>
+            <span className="font-medium text-foreground">{e.agent}/{e.tool}</span>
             <span className="ml-auto text-muted-foreground">{e.durationMs}ms</span>
-          </div>
+          </button>
         ))}
       </div>
     );
@@ -108,11 +129,15 @@ function DrawerContent({ tab, activity, items }: { tab: Tab; activity: any[]; it
     return (
       <div className="space-y-0.5">
         {items.slice(-30).reverse().map((e, i) => (
-          <div key={i} className="flex items-center gap-2 text-muted-foreground">
-            <span className="w-8 text-foreground/70">{e.status || '·'}</span>
-            <b className="text-foreground/80">{e.method}</b>
-            <span className="truncate">{String(e.url || '').slice(0, 100)}</span>
-          </div>
+          <button
+            key={i}
+            onClick={() => navigator.clipboard.writeText(e.url || '').catch(() => {})}
+            className="flex w-full items-center gap-2 text-left text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+          >
+            <span className="rounded bg-blue-500/10 px-1 py-0.5 font-mono text-[10px] text-blue-500">{e.method || '?'}</span>
+            <span className="truncate flex-1">{e.url}</span>
+            <span className={e.status >= 400 ? 'text-destructive' : 'text-success'}>{e.status || '?'}</span>
+          </button>
         ))}
       </div>
     );
