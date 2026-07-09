@@ -16,7 +16,7 @@ describe('TopBar', () => {
       />
     );
     expect(container.textContent).toContain('WebPilot');
-    expect(container.textContent).toContain('v4.0.3');
+    expect(container.textContent).toContain('v4.0.4');
   });
 
   it('calls onToggleTheme when theme button clicked', async () => {
