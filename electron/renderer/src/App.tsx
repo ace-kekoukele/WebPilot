@@ -4,7 +4,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Sidebar } from './components/sidebar';
 import { TopBar } from './components/topbar';
 import { BottomDrawer } from './components/bottom-drawer';
-import { ToastContainer, useToasts } from './components/Toast';
+import { pushToast } from './components/Toast';
+import { Toaster } from './components/ui/sonner';
 import { CommandPalette } from './components/command-palette';
 import { HelpOverlay } from './components/help-overlay';
 import { SettingsOverlay } from './components/settings-overlay';
@@ -43,15 +44,12 @@ export function App() {
     return localStorage.getItem(WHATS_NEW_KEY) !== CURRENT_VERSION;
   });
   const store = useAppStore();
-  const toasts = useToasts();
   const [tools, setTools] = useState<any[]>([]);
 
   const dismissWhatsNew = useCallback(() => {
     localStorage.setItem(WHATS_NEW_KEY, CURRENT_VERSION);
     setWhatsNewOpen(false);
   }, []);
-
-  // 首启 — "What's new" 已在初始化 state 时检查,无需 useEffect
 
   // 启动时加载工具 + 健康检查
   useEffect(() => {
@@ -68,7 +66,7 @@ export function App() {
             }
           }
           if (migrated.length > 0) {
-            toasts.push({
+            pushToast({
               kind: 'warn',
               title: '端口已自动迁移',
               description: migrated.map((m) => `${m.name}: ${m.from}→${m.to}`).join(', '),
@@ -115,7 +113,7 @@ export function App() {
   const openRepair = useCallback(() => setRepairOpen(true), []);
 
   return (
-    <div className="app-root">
+    <div className="app-root flex h-screen flex-col bg-background text-foreground">
       <TopBar
         theme={theme}
         onToggleTheme={toggleTheme}
@@ -124,9 +122,9 @@ export function App() {
         onOpenRepair={openRepair}
         onOpenSettings={() => setSettingsOpen(true)}
       />
-      <div className="layout">
+      <div className="flex min-h-0 flex-1">
         <Sidebar mode={mode} onChange={setMode} />
-        <main className="main flex-1 overflow-hidden">
+        <main className="flex-1 overflow-hidden">
           <AnimatePresence mode="wait">
             <motion.div
               key={mode}
@@ -134,7 +132,7 @@ export function App() {
               className="h-full overflow-y-auto"
             >
               {mode === 'browser' && <BrowserPanel tools={tools} />}
-              {mode === 'chat' && <ChatPanel onToast={toasts.push} />}
+              {mode === 'chat' && <ChatPanel onToast={pushToast} />}
               {mode === 'automation' && <AutomationPanel tools={tools} />}
               {mode === 'monitor' && <MonitorPanel />}
               {mode === 'wizard' && <Wizard onDone={() => setMode('browser')} />}
@@ -145,11 +143,11 @@ export function App() {
       <BottomDrawer open={drawerOpen} onToggle={() => setDrawerOpen((v) => !v)} onOpenRepair={openRepair} />
 
       {whatsNewOpen && <WhatsNewOverlay onClose={dismissWhatsNew} />}
-      {paletteOpen && <CommandPalette tools={tools} onClose={() => setPaletteOpen(false)} onToast={toasts.push} onOpenRepair={openRepair} onOpenSettings={() => { setPaletteOpen(false); setSettingsOpen(true); }} />}
+      {paletteOpen && <CommandPalette tools={tools} onClose={() => setPaletteOpen(false)} onToast={pushToast} onOpenRepair={openRepair} onOpenSettings={() => { setPaletteOpen(false); setSettingsOpen(true); }} />}
       {helpOpen && <HelpOverlay onClose={() => setHelpOpen(false)} />}
       {settingsOpen && <SettingsOverlay onClose={() => setSettingsOpen(false)} />}
-      {repairOpen && <RepairDialog onClose={() => setRepairOpen(false)} onToast={toasts.push} />}
-      <ToastContainer toasts={toasts.toasts} onDismiss={toasts.dismiss} />
+      {repairOpen && <RepairDialog onClose={() => setRepairOpen(false)} onToast={pushToast} />}
+      <Toaster />
     </div>
   );
 }

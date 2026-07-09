@@ -1,6 +1,43 @@
 # WebPilot v4.0 — 发布说明
 
 > **2026-07-09 文档整理:** 13 个过时文档(描述 v1.7.0 的 45 工具时代)已删除,新增 `HANDOFF.md` + `docs/ARCHITECTURE.md` + `docs/CODE_STATUS.md`,重写 `CONTRIBUTING.md`。
+>
+> **2026-07-09 视觉重做:** v4.0.3 完成 GUI Mac 级工业设计重做 + Electron 桌面端。
+
+## v4.0.3 (2026-07-09) — Mac 级工业设计 + 桌面应用
+
+### GUI 重做(对照 Linear / Raycast / Things 3 / Arc)
+- **技术栈换装:** Tailwind v4(CSS-first `@theme`)+ shadcn/ui(new-york style)+ framer-motion + lucide-react + Sonner + react-markdown
+- **字体自托管:** Inter Variable + 思源黑体 woff2(`font-display: swap`,CSP `font-src 'self' data:`)
+- **布局壳:** TopBar 44px backdrop-blur + Sidebar 52px `layoutId="sidebar-pill"` 活动指示器 + BottomDrawer 220ms spring
+- **模式切换动画:** `AnimatePresence mode="wait"` + `motion.div` 180ms 淡入淡出 + y 8px 滑动
+- **Panel empty/loading 系统:** `<EmptyState>` Lucide 图标 + 标题 + 描述 + CTA / shadcn `<Skeleton>` shimmer
+- **弹层系统:** CommandPalette / HelpOverlay / SettingsOverlay / RepairDialog / WhatsNewOverlay 全走 shadcn Dialog(180ms scale-fade)
+- **ChatPanel 旗舰升级:** markdown(`react-markdown` + remark-gfm + rehype-sanitize,lazy 加载) + 流式光标(`motion.span` 800ms loop) + tool-call card(可折叠 args/result) + typing indicator(3 点脉冲)
+- **Sonner 替换手写 pub/sub:** `pushToast()` API 保留兼容,后台走 Sonner
+- **A11y:** `MotionConfig reducedMotion="user"` 顶层 + 所有 icon-only 按钮补 `aria-label` + Radix Dialog 焦点 trap
+
+### 桌面端(Electron)
+- 主进程 `electron/main.js`:拉起 daemon 子进程 + 创建 BrowserWindow 加载 `dist/index.html` + 单实例锁
+- 预加载 `electron/preload.js`:`window.electronAPI` 暴露 quit / openDevTools / getVersion
+- 系统托盘 `electron/tray.js`:右键菜单(打开 / 修复 / 设置 / 退出)+ 单击切换窗口可见
+- 系统菜单 `electron/menu.js`:文件 / 编辑 / 视图 / 窗口 / 帮助
+- electron-builder.json:NSIS 用户级安装 + 桌面 / 开始菜单快捷方式 + `.wp-workflow` 文件关联
+- 应用图标:3 色重做(左圆点绿 `#10B981` = 用户浏览器 / 右圆点紫 `#8B5CF6` = AI 助手 / 拱弧紫 `#6366F1` = 桥 = `--primary`)
+
+### 后端杂项
+- 版本号同步:`lib/version.js` + `package.json` + README banner 全 4.0.3
+- 描述字段更新:"桌面 GUI (Mac 级工业设计 · shadcn/ui · Inter/Noto Sans SC · framer-motion)"
+- 新增 npm scripts:`test:renderer` (vitest run),`test` 跑 Node test + vitest,`dist` (electron-builder --win),`dist:dir`
+- 新增 devDeps:electron-builder, sharp
+
+### 验证
+- `npm run build` → gzipped JS ~165KB(< 250KB 预算),CSS ~15KB(< 50KB)
+- `npm test` → 197 个 Node test + vitest smoke 全过
+- `npm run dist:dir` → `dist/win-unpacked/WebPilot.exe` 双击独立运行
+- 5 个核心 panel before/after 100% 功能一致
+
+---
 
 ## v4.0.2 (2026-07-09) — 代码整合 + 文档沉淀
 

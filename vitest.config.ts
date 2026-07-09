@@ -7,6 +7,8 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
+    include: ['electron/renderer/src/**/__tests__/**/*.{test,spec}.{ts,tsx}', 'electron/renderer/src/**/*.test.{ts,tsx}'],
+    exclude: ['node_modules', 'dist', 'test/**', 'electron/**/node_modules/**'],
     setupFiles: ['./electron/renderer/src/test/setup.ts'],
     css: true,
   },

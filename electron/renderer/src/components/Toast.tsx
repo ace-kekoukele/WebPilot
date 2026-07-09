@@ -1,5 +1,6 @@
-// src/components/Toast.tsx — Toast 通知层
-import React, { useEffect, useState, useCallback } from 'react';
+// src/components/Toast.tsx — Sonner 包装 (plan P6: 删手写 pub/sub, 改 Sonner)
+// 保留 pushToast + dismissToast API 以最小化调用方改动
+import { toast } from 'sonner';
 
 export interface Toast {
   id: number;
@@ -11,53 +12,27 @@ export interface Toast {
 }
 
 let _id = 0;
-const listeners = new Set<(t: Toast) => void>();
-const _toasts: Toast[] = [];
-
 export function pushToast(t: Omit<Toast, 'id'>) {
-  const toast: Toast = { id: ++_id, duration: 4000, ...t };
-  _toasts.push(toast);
-  listeners.forEach((l) => l());
-  if (toast.duration && toast.duration > 0) {
-    setTimeout(() => dismissToast(toast.id), toast.duration);
+  _id++;
+  const duration = t.duration ?? 4000;
+  const opts: any = { duration, id: String(_id) };
+  if (t.description) opts.description = t.description;
+  if (t.actions && t.actions.length > 0) {
+    opts.action = { label: t.actions[0].label, onClick: () => { t.actions![0].onClick(); toast.dismiss(String(_id)); } };
   }
-  return toast.id;
+
+  if (t.kind === 'success') toast.success(t.title, opts);
+  else if (t.kind === 'error') toast.error(t.title, opts);
+  else if (t.kind === 'warn') toast.warning(t.title, opts);
+  else toast(t.title, opts);
+  return _id;
 }
-export function dismissToast(id: number) {
-  const i = _toasts.findIndex((t) => t.id === id);
-  if (i >= 0) { _toasts.splice(i, 1); listeners.forEach((l) => l()); }
-}
+export function dismissToast(id: number) { toast.dismiss(String(id)); }
+
+// 保留兼容旧 API
 export function useToasts() {
-  const [toasts, setToasts] = useState<Toast[]>([]);
-  useEffect(() => {
-    const cb = () => setToasts([..._toasts]);
-    listeners.add(cb);
-    cb();
-    return () => { listeners.delete(cb); };
-  }, []);
-  return { toasts, push: pushToast, dismiss: dismissToast };
+  return { toasts: [], push: pushToast, dismiss: dismissToast };
 }
 
-export function ToastContainer({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id: number) => void }) {
-  return (
-    <div className="toast-container">
-      {toasts.map((t) => (
-        <div key={t.id} className={`toast toast-${t.kind}`}>
-          <div className="toast-icon">{t.kind === 'success' ? '✓' : t.kind === 'warn' ? '⚠' : t.kind === 'error' ? '✗' : t.kind === 'action' ? '⚙' : 'ℹ'}</div>
-          <div className="toast-content">
-            <div className="toast-title">{t.title}</div>
-            {t.description && <div className="toast-desc">{t.description}</div>}
-            {t.actions && t.actions.length > 0 && (
-              <div className="toast-actions">
-                {t.actions.map((a, i) => (
-                  <button key={i} className="ghost-btn" onClick={() => { a.onClick(); onDismiss(t.id); }}>{a.label}</button>
-                ))}
-              </div>
-            )}
-          </div>
-          <button className="toast-close" onClick={() => onDismiss(t.id)}>×</button>
-        </div>
-      ))}
-    </div>
-  );
-}
+// ToastContainer 已废弃 (Sonner 自己管理渲染) — 保留空 export 以兼容旧调用
+export function ToastContainer(_props: any) { return null; }
