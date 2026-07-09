@@ -1,0 +1,252 @@
+{
+  "_meta": {
+    "generated": "2026-07-09",
+    "version": "4.0.4",
+    "total": 75,
+    "legend": {
+      "complete": "完整实现，功能正常",
+      "partial": "部分实现，核心功能可用",
+      "broken": "空壳或已损坏，需修复",
+      "experimental": "实验性，功能不稳定"
+    }
+  },
+
+  "browser_navigate": {
+    "status": "complete",
+    "severity": "P0",
+    "reason": "重试 + waitForSelector + waitForNetworkIdle 全部实现",
+    "fix": "已修复（v4.0.4 WEBPILOT_MODIFICATION_GUIDE）",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_click": {
+    "status": "complete",
+    "severity": "P0",
+    "reason": "selector + 坐标点击 + mousePressed/mouseReleased 完整实现",
+    "fix": "新建（v4.0.4 WEBPILOT_MODIFICATION_GUIDE）",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_type": {
+    "status": "complete",
+    "severity": "P0",
+    "reason": "延迟输入 + clear + pressEnter 完整实现",
+    "fix": "新建（v4.0.4 WEBPILOT_MODIFICATION_GUIDE）",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_eval": {
+    "status": "complete",
+    "severity": "P0",
+    "reason": "16 种 FORBIDDEN patterns 安全检查完整实现",
+    "fix": "已修复（v4.0.4 WEBPILOT_MODIFICATION_GUIDE）",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_fetch": {
+    "status": "complete",
+    "severity": "P0",
+    "reason": "enable/disable/list/intercept 四种 action 全部实现",
+    "fix": "已修复（v4.0.4 WEBPILOT_MODIFICATION_GUIDE）",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_websocket": {
+    "status": "complete",
+    "severity": "P1",
+    "reason": "WebSocketFrameReceived/Sent/Error 全局事件监听已实现",
+    "fix": "已修复（v4.0.4 WEBPILOT_MODIFICATION_GUIDE）",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_screencast": {
+    "status": "complete",
+    "severity": "P1",
+    "reason": "screencastFrame 帧写入磁盘 + JPEG 编码完整实现",
+    "fix": "已修复（v4.0.4 WEBPILOT_MODIFICATION_GUIDE）",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_screenshot": {
+    "status": "complete",
+    "severity": "P0",
+    "reason": "Page.captureScreenshot 完整实现，支持 format/quality/clip",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_dom_snapshot": {
+    "status": "complete",
+    "severity": "P1",
+    "reason": "DOMSnapshot.captureSnapshot 完整实现",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_console_messages": {
+    "status": "complete",
+    "severity": "P0",
+    "reason": "Runtime.getConsoleMessages 完整实现，daemon console-stream 已接入",
+    "fix": "已实现（v4.0.4 B1-9）",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_cookies_get": {
+    "status": "complete",
+    "severity": "P1",
+    "reason": "Network.getCookies 完整实现",
+    "fix": "已实现（v4.0.4 B3-30）",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_cookies_set": {
+    "status": "complete",
+    "severity": "P1",
+    "reason": "Network.setCookie 完整实现",
+    "fix": "已实现（v4.0.4 B3-30）",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_cookies_delete": {
+    "status": "complete",
+    "severity": "P1",
+    "reason": "Network.deleteCookies 完整实现",
+    "fix": "已实现（v4.0.4 B3-30）",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_network": {
+    "status": "complete",
+    "severity": "P0",
+    "reason": "daemon network-store 已接入，SSE 流式推送，详情/重放/拦截全实现",
+    "fix": "已实现（v4.0.4 B2-17）",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_recorder_start": {
+    "status": "complete",
+    "severity": "P1",
+    "reason": "Page.startRecording + Overlay.types/Input.dispatchMouseEvent 回放已实现",
+    "fix": "已实现（v4.0.4 B2-16）",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_recorder_stop": {
+    "status": "complete",
+    "severity": "P1",
+    "reason": "Page.stopRecording 完整实现",
+    "fix": "已实现（v4.0.4 B2-16）",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_debugger": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "Debugger.enable/setBreakpoint/list 完整实现",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_tracing": {
+    "status": "partial",
+    "severity": "P2",
+    "reason": "Page.startTrace/Page.endTrace 基础可用，远程 trace 传输未实现",
+    "fix": "部分实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_performance_metrics": {
+    "status": "complete",
+    "severity": "P1",
+    "reason": "Performance.getMetrics 完整实现，含 FPS/Memory/Heap",
+    "fix": "已实现（v4.0.4 B3-33）",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_heap_snapshot": {
+    "status": "partial",
+    "severity": "P2",
+    "reason": "HeapProfiler.takeSnapshot 基础可用，详细分析未实现",
+    "fix": "部分实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_cdp_command": {
+    "status": "complete",
+    "severity": "P1",
+    "reason": "sendCommand 通用调用，熔断器已接入",
+    "fix": "已实现（v4.0.4 CircuitBreaker）",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_extract_apis": {
+    "status": "partial",
+    "severity": "P2",
+    "reason": "基础 metrics 可获取，Audit.getAudits 增强功能未实现",
+    "fix": "部分实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_audit_full": {
+    "status": "partial",
+    "severity": "P2",
+    "reason": "基础 metrics 可获取，Audit.getAudits 增强功能未实现",
+    "fix": "部分实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_storage": {
+    "status": "partial",
+    "severity": "P2",
+    "reason": "localStorage/ sessionStorage 可获取，IndexedDB 未实现",
+    "fix": "部分实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_dom_get_attributes": {
+    "status": "complete",
+    "severity": "P1",
+    "reason": "Runtime.callFunctionOn + element attribute 读取完整实现",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_input": {
+    "status": "complete",
+    "severity": "P0",
+    "reason": "Input.dispatchKeyEvent + mouseEvent 完整实现",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_go_back": {
+    "status": "complete",
+    "severity": "P1",
+    "reason": "Navigation.navigate 完整实现",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_go_forward": {
+    "status": "complete",
+    "severity": "P1",
+    "reason": "Navigation.navigate 完整实现",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_reload": {
+    "status": "complete",
+    "severity": "P1",
+    "reason": "Navigation.reload 完整实现",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_close": {
+    "status": "complete",
+    "severity": "P1",
+    "reason": "Page.close 完整实现",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_create_target": {
+    "status": "complete",
+    "severity": "P1",
+    "reason": "Target.createTarget 完整实现",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_list_targets": {
+    "status": "complete",
+    "severity": "P0",
+    "reason": "Target.getTargets 完整实现，daemon 启动时自动获取",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_close_target": {
+    "status": "complete",
+    "severity": "P1",
+    "reason": "Target.closeTarget 完整实现",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_activate_target": {
+    "status": "complete",
+    "severity": "P1",
+    "reason": "Target.activateTarget 完整实现",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  }
+}
