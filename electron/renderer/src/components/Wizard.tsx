@@ -20,7 +20,7 @@ export function Wizard({ onDone }: Props) {
       {step === 1 && (
         <>
           <h2>欢迎使用 WebPilot</h2>
-          <p style={{ color: 'var(--text-2)' }}>v4.0.0 · protocol 4.0</p>
+          <p style={{ color: 'var(--text-2)' }}>v4.0.4 · protocol 4.0</p>
           <p>三步跑起来:</p>
           <ol>
             <li>启动 Chrome (带 debug 端口)</li>
