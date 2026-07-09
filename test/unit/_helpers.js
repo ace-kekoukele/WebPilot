@@ -44,26 +44,26 @@ export class MockWs extends EventEmitter {
     this.emit('message', JSON.stringify({ id: msg.id, error: { code: -32001, message } }));
   }
 
-  /** 回复最近第 i 条 (i=0 是第一条) */
+  /** 回复第 i 条 (i=0 是第一条,i=1 是第二条,...) */
   replyTo(i, result) {
-    const sent = this.sent[this.sent.length - 1 - i];
+    const sent = this.sent[i];
     if (sent) this.replyToMsg(sent, result);
   }
 
   replyErrorTo(i, message) {
-    const sent = this.sent[this.sent.length - 1 - i];
+    const sent = this.sent[i];
     if (sent) this.replyErrorToMsg(sent, message);
   }
 
-  /** 延迟 n ms 后回复最近第 i 条 */
+  /** 延迟 n ms 后回复第 i 条 */
   replyToDelayed(i, result, delayMs) {
-    const sent = this.sent[this.sent.length - 1 - i];
+    const sent = this.sent[i];
     if (sent) this._delayed.push({ id: sent.id, delay: delayMs, result });
   }
 
   /** 延迟 n ms 后报错 */
   replyErrorDelayed(i, message, delayMs) {
-    const sent = this.sent[this.sent.length - 1 - i];
+    const sent = this.sent[i];
     if (sent) this._delayed.push({ id: sent.id, delay: delayMs, error: message });
   }
 

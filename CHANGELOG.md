@@ -54,7 +54,7 @@
 - `npm test` → 4/4 (vitest smoke tests)
 - `npm run build` → 3.93s, JS ~170KB gzipped, CSS ~10KB
 - `npm run dist` → `WebPilot Setup 4.0.4.exe` (93MB)
-- SHA256: `a216fcae36bffba26d24739e104e2572524c32a45ece205d6d2cc4742d79d691`
+- SHA256: `8052F0C48E4316366EB36414F82F00BF5DBB66AEA2FC9CC6F44D1118B2D2DF92`
 
 ---
 

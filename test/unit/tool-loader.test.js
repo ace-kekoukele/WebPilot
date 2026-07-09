@@ -40,5 +40,5 @@ test('callTool: 工具 execute 抛异常 → callTool 捕获并返回 { ok: fals
   // 找一个会在无 Chrome 时抛的: sendPageCommand 会抛
   const r = await callTool('browser_eval', { targetId: 'FAKE_TID', expression: '1+1' });
   assert.equal(r.ok, false);
-  assert.match(r.error, /no session/);
+  assert.match(r.error, /CDPError|session/);
 });

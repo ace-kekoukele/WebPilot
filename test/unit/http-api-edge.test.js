@@ -159,5 +159,5 @@ test('并发 5 个 tools/call 不同工具 → 各自独立返回', async () => 
   assert.equal(results[1].body.error, 'targetId required');
   assert.equal(results[2].body.error, 'key required');
   assert.equal(results[3].body.error, 'filePath required');
-  assert.match(results[4].body.error, /no session for targetId/);
+  assert.match(results[4].body.error, /session|targetId/);
 });

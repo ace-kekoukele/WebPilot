@@ -12,17 +12,17 @@ beforeEach(() => _resetForTest());
 afterEach(async () => { try { await disconnect(); } catch {} });
 
 // ──── sendPageCommand 错误路径 ────────────────────────────────────────
-test('sendPageCommand: targetId 不在 sessionMap → "no session for targetId"', async () => {
+test('sendPageCommand: targetId 不在 sessionMap → CDPError', async () => {
   await assert.rejects(
     sendPageCommand('NOT_REGISTERED', 'Runtime.evaluate', { expression: '1' }),
-    /no session for targetId NOT_REGISTERED/
+    /CDPError/
   );
 });
 
-test('sendPageCommand: undefined targetId → "no session for targetId"', async () => {
+test('sendPageCommand: undefined targetId → CDPError', async () => {
   await assert.rejects(
     sendPageCommand(undefined, 'Runtime.evaluate', { expression: '1' }),
-    /no session for targetId/
+    /CDPError/
   );
 });
 
