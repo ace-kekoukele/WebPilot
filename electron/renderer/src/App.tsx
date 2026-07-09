@@ -1,8 +1,9 @@
-// src/App.tsx — 主应用 (4 模式 Sidebar + TopBar + 主内容)
+// src/App.tsx — 主应用 (4 模式 Sidebar + TopBar + 主内容, framer-motion 模式切换动画)
 import { useEffect, useState, useCallback } from 'react';
-import { Sidebar } from './components/Sidebar';
-import { TopBar } from './components/TopBar';
-import { BottomDrawer } from './components/BottomDrawer';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Sidebar } from './components/sidebar';
+import { TopBar } from './components/topbar';
+import { BottomDrawer } from './components/bottom-drawer';
 import { ToastContainer, useToasts } from './components/Toast';
 import { CommandPalette } from './components/CommandPalette';
 import { HelpOverlay } from './components/HelpOverlay';
@@ -23,6 +24,13 @@ type Mode = 'browser' | 'chat' | 'automation' | 'monitor' | 'wizard';
 const WHATS_NEW_KEY = 'webpilot-seen-whats-new';
 const CURRENT_VERSION = '4.0.3';
 
+const MODE_TRANSITION = {
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -4 },
+  transition: { duration: 0.18, ease: [0.4, 0, 0.2, 1] as const },
+};
+
 export function App() {
   const [mode, setMode] = useState<Mode>('browser');
   const { theme, toggle: toggleTheme } = useTheme();
@@ -38,12 +46,12 @@ export function App() {
   const toasts = useToasts();
   const [tools, setTools] = useState<any[]>([]);
 
-  // 首启 — "What's new" 已在初始化 state 时检查,无需 useEffect
-
   const dismissWhatsNew = useCallback(() => {
     localStorage.setItem(WHATS_NEW_KEY, CURRENT_VERSION);
     setWhatsNewOpen(false);
   }, []);
+
+  // 首启 — "What's new" 已在初始化 state 时检查,无需 useEffect
 
   // 启动时加载工具 + 健康检查
   useEffect(() => {
@@ -118,12 +126,20 @@ export function App() {
       />
       <div className="layout">
         <Sidebar mode={mode} onChange={setMode} />
-        <main className="main">
-          {mode === 'browser' && <BrowserPanel tools={tools} />}
-          {mode === 'chat' && <ChatPanel onToast={toasts.push} />}
-          {mode === 'automation' && <AutomationPanel tools={tools} />}
-          {mode === 'monitor' && <MonitorPanel />}
-          {mode === 'wizard' && <Wizard onDone={() => setMode('browser')} />}
+        <main className="main flex-1 overflow-hidden">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={mode}
+              {...MODE_TRANSITION}
+              className="h-full overflow-y-auto"
+            >
+              {mode === 'browser' && <BrowserPanel tools={tools} />}
+              {mode === 'chat' && <ChatPanel onToast={toasts.push} />}
+              {mode === 'automation' && <AutomationPanel tools={tools} />}
+              {mode === 'monitor' && <MonitorPanel />}
+              {mode === 'wizard' && <Wizard onDone={() => setMode('browser')} />}
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
       <BottomDrawer open={drawerOpen} onToggle={() => setDrawerOpen((v) => !v)} onOpenRepair={openRepair} />
