@@ -1,8 +1,15 @@
-// src/panels/ChatPanel.tsx — AI 助手 (真流式 + 工具调用)
-import React, { useState, useEffect, useRef } from 'react';
+// src/panels/ChatPanel.tsx — AI 助手 (Mac 级: shadcn + markdown + 流式光标 + tool-call card)
+// SSE 解析器保留原逻辑(plan P5 明确"不动 — 最风险的部分")
+import { useState, useEffect } from 'react';
+import { Plus, Send, AlertTriangle, Sparkles } from 'lucide-react';
 import { useAppStore, store } from '../store';
-import { apiGet, apiPost } from '../lib/api';
-import { pushToast } from '../components/Toast';
+import { apiGet } from '../lib/api';
+import { Button } from '../components/ui/button';
+import { cn } from '../lib/cn';
+import { useAutoScroll } from '../lib/use-auto-scroll';
+import { MessageBubble } from '../components/chat/message-bubble';
+import { TypingIndicator } from '../components/chat/typing-indicator';
+import { EmptyState } from '../components/empty-state';
 
 interface Props { onToast: (t: any) => void; }
 
@@ -13,7 +20,7 @@ export function ChatPanel({ onToast }: Props) {
   const currentId = useAppStore((s) => s.currentSessionId);
   const activeProvider = useAppStore((s) => s.llmActive);
   const [providers, setProviders] = useState<any[]>([]);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesRef = useAutoScroll<HTMLDivElement>([session, busy]);
 
   useEffect(() => {
     if (session.length === 0) store.newChatSession();
@@ -23,11 +30,9 @@ export function ChatPanel({ onToast }: Props) {
     }).catch(() => {});
   }, []);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [session]);
-
   const current = session.find((s) => s.id === currentId);
+  const messages = current?.messages ?? [];
+  const last = messages[messages.length - 1];
 
   const send = async () => {
     const text = input.trim();
@@ -37,15 +42,15 @@ export function ChatPanel({ onToast }: Props) {
     store.pushMessage(current.id, { role: 'user', content: text, ts: Date.now() });
 
     if (!activeProvider) {
-      store.pushMessage(current.id, { role: 'assistant', content: '⚠ 未配置 LLM API. 在 ⚙ 设置 → 💬 LLM API 添加 key.', ts: Date.now() });
+      store.pushMessage(current.id, { role: 'system', content: '未配置 LLM API. 在 设置 → LLM API 添加 key.', ts: Date.now() });
       setBusy(false);
+      onToast({ kind: 'warn', title: '未配置 LLM', description: '请到 设置 → LLM API 配置 key' });
       return;
     }
 
-    // 真流式
+    // 原 SSE 解析逻辑 (P5 plan 明确"不动")
     const allMsgs = [...current.messages, { role: 'user', content: text }];
     store.pushMessage(current.id, { role: 'assistant', content: '', toolCalls: [], ts: Date.now() });
-    const assIdx = current.messages.length + 1;   // assistant push 后 idx
 
     try {
       const res = await fetch('/api/llm/chat', {
@@ -89,66 +94,114 @@ export function ChatPanel({ onToast }: Props) {
       }
     } catch (e: any) {
       store.updateLastMessage(current.id, (m: any) => m.role === 'assistant' && !m.content ? { ...m, content: '⚠ ' + e.message } : m);
+      onToast({ kind: 'error', title: '请求失败', description: e.message });
     } finally { setBusy(false); }
   };
 
   return (
-    <section className="mode-panel">
-      <div className="chat-container">
-        <div className="chat-sidebar">
-          <button className="primary-btn full-width" onClick={() => store.newChatSession()}>+ 新会话</button>
-          <div className="chat-session-list">
+    <section className="mode-panel flex h-full">
+      <div className="flex w-full">
+        {/* 会话侧栏 */}
+        <div className="flex w-56 flex-col gap-2 border-r border-border p-2">
+          <Button size="sm" onClick={() => store.newChatSession()} className="w-full justify-start gap-1.5">
+            <Plus className="h-3.5 w-3.5" />
+            新会话
+          </Button>
+          <div className="flex flex-col gap-0.5">
             {session.map((s) => (
-              <div key={s.id} className={`chat-session ${s.id === currentId ? 'active' : ''}`} onClick={() => store.setCurrentSession(s.id)}>
-                {s.title}
-              </div>
+              <button
+                key={s.id}
+                onClick={() => store.setCurrentSession(s.id)}
+                className={cn(
+                  'flex w-full items-center rounded-md px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-accent',
+                  s.id === currentId ? 'bg-accent text-foreground' : 'text-muted-foreground'
+                )}
+              >
+                <span className="truncate">{s.title}</span>
+              </button>
             ))}
           </div>
         </div>
-        <div className="chat-main">
-          <div className="chat-messages">
-            {current?.messages.length === 0 && (
-              <div style={{ textAlign: 'center', color: 'var(--text-3)', padding: 60 }}>
-                <div style={{ fontSize: 48, marginBottom: 12, opacity: 0.3 }}>💬</div>
-                <div>向 AI 提问，让它控制浏览器</div>
-                <div style={{ fontSize: 12, marginTop: 8 }}>例如: "打开 github.com 并截图"</div>
+
+        {/* 主区 */}
+        <div className="flex min-w-0 flex-1 flex-col">
+          <div ref={messagesRef} className="flex-1 overflow-y-auto px-4 py-3">
+            {messages.length === 0 ? (
+              <EmptyState
+                icon={Sparkles}
+                title="向 AI 提问"
+                description="让 AI 助手帮你操作浏览器 · 例如「打开 github.com 并截图」"
+                className="h-full"
+              />
+            ) : (
+              <div className="mx-auto max-w-3xl space-y-1">
+                {messages.map((m, i) => {
+                  const isLast = i === messages.length - 1;
+                  const isStreamingAssistant = isLast && busy && m.role === 'assistant';
+                  return (
+                    <MessageBubble
+                      key={i}
+                      role={m.role}
+                      content={m.content}
+                      toolCalls={m.toolCalls}
+                      streaming={isStreamingAssistant}
+                    />
+                  );
+                })}
+                {busy && (!last || last.role !== 'assistant' || (!last.content && !last.toolCalls?.length)) && (
+                  <div className="flex items-center gap-2 px-1 py-2 text-xs text-muted-foreground">
+                    <TypingIndicator />
+                    <span>AI 思考中...</span>
+                  </div>
+                )}
               </div>
             )}
-            {current?.messages.map((m, i) => (
-              <div key={i} className={`chat-msg ${m.role}`}>
-                <div className="chat-msg-avatar">{m.role === 'user' ? '👤' : '🤖'}</div>
-                <div className="chat-msg-body">
-                  <div className="chat-msg-role">{m.role}</div>
-                  <div className="chat-msg-content">{m.content}</div>
-                  {m.toolCalls?.map((t: any, j: number) => (
-                    <div key={j} className="chat-tool-call">
-                      <div className="chat-tool-call-name">🔧 {t.name}</div>
-                      <div className="chat-tool-call-args">{JSON.stringify(t.args || {})}</div>
-                      {t.result && <div className={`chat-tool-call-result ${t.result.ok ? 'ok' : 'err'}`}>{t.result.ok ? '✓' : '✗'} {JSON.stringify(t.result.value || t.result.error).slice(0, 200)}</div>}
-                    </div>
-                  ))}
+          </div>
+
+          {/* 输入区 */}
+          <div className="border-t border-border p-3">
+            <div className="mx-auto max-w-3xl space-y-2">
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+                }}
+                placeholder="输入消息... (Enter 发送 · Shift+Enter 换行 · @ 工具 · / 模板)"
+                rows={3}
+                disabled={busy}
+                className={cn(
+                  'flex w-full resize-none rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm',
+                  'text-foreground placeholder:text-muted-foreground',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  'disabled:cursor-not-allowed disabled:opacity-50',
+                )}
+              />
+              <div className="flex items-center gap-2">
+                <select
+                  value={activeProvider || ''}
+                  onChange={(e) => store.setLLMActive(e.target.value || null)}
+                  className={cn(
+                    'h-8 rounded-md border border-input bg-transparent px-2 text-xs',
+                    'text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  )}
+                >
+                  <option value="">{activeProvider ? '当前 LLM' : '未配置 LLM'}</option>
+                  {providers.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+                <div className="ml-auto flex items-center gap-2">
+                  {!activeProvider && (
+                    <span className="inline-flex items-center gap-1 text-[11px] text-warning">
+                      <AlertTriangle className="h-3 w-3" />
+                      未配置 LLM
+                    </span>
+                  )}
+                  <Button size="sm" onClick={send} disabled={busy || !input.trim()} className="gap-1.5">
+                    <Send className="h-3.5 w-3.5" />
+                    {busy ? '生成中...' : '发送'}
+                  </Button>
                 </div>
               </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
-          <div className="chat-input-area">
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
-              }}
-              placeholder="输入消息... (Enter 发送 · Shift+Enter 换行 · @ 工具 · / 模板)"
-              rows={3}
-              disabled={busy}
-            />
-            <div className="chat-input-toolbar">
-              <select value={activeProvider || ''} onChange={(e) => store.setLLMActive(e.target.value || null)}>
-                <option value="">{activeProvider ? '当前 LLM' : '未配置 LLM'}</option>
-                {providers.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
-              <button className="primary-btn" onClick={send} disabled={busy}>{busy ? '生成中...' : '发送'}</button>
             </div>
           </div>
         </div>
