@@ -1,0 +1,66 @@
+{
+  "appId": "com.webpilot.desktop",
+  "productName": "WebPilot",
+  "copyright": "MIT",
+  "directories": {
+    "output": "dist",
+    "buildResources": "build"
+  },
+  "files": [
+    "electron/**/*",
+    "daemon/**/*",
+    "lib/**/*",
+    "tools/**/*",
+    "node_modules/**/*",
+    "package.json",
+    "package-lock.json",
+    "!**/*.bak",
+    "!**/*.test.js",
+    "!**/__tests__/**"
+  ],
+  "asarUnpack": [
+    "package.json",
+    "daemon/**/*",
+    "lib/**/*",
+    "tools/**/*",
+    "node_modules/**/*"
+  ],
+  "extraResources": [
+    {
+      "from": "build",
+      "to": "build",
+      "filter": ["**/*.ico", "**/*.png", "**/*.svg"]
+    },
+    {
+      "from": "electron/renderer/dist",
+      "to": "electron/renderer/dist"
+    }
+  ],
+  "win": {
+    "target": [
+      { "target": "nsis", "arch": ["x64"] },
+      { "target": "zip", "arch": ["x64"] }
+    ],
+    "icon": "build/icon.ico",
+    "artifactName": "WebPilot Setup ${version}.${ext}"
+  },
+  "nsis": {
+    "oneClick": false,
+    "perMachine": false,
+    "allowElevation": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "WebPilot",
+    "uninstallDisplayName": "WebPilot",
+    "deleteAppDataOnUninstall": false
+  },
+  "fileAssociations": [
+    {
+      "ext": "wp-workflow",
+      "name": "WebPilot Workflow",
+      "description": "WebPilot 工作流文件",
+      "icon": "build/icon.ico"
+    }
+  ]
+}

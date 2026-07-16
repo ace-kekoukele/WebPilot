@@ -1,0 +1,581 @@
+{
+  "_meta": {
+    "generated": "2026-07-09",
+    "updated": "2026-07-16",
+    "version": "4.0.5",
+    "total": 81,
+    "legend": {
+      "complete": "完整实现，功能正常",
+      "partial": "部分实现，核心功能可用",
+      "broken": "空壳或已损坏，需修复",
+      "experimental": "实验性，功能不稳定"
+    }
+  },
+  "browser_navigate": {
+    "status": "complete",
+    "severity": "P0",
+    "reason": "重试 + waitForSelector + waitForNetworkIdle 全部实现",
+    "fix": "已修复（v4.0.4 WEBPILOT_MODIFICATION_GUIDE）",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_click": {
+    "status": "complete",
+    "severity": "P0",
+    "reason": "selector + 坐标点击 + mousePressed/mouseReleased 完整实现",
+    "fix": "新建（v4.0.4 WEBPILOT_MODIFICATION_GUIDE）",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_type": {
+    "status": "complete",
+    "severity": "P0",
+    "reason": "延迟输入 + clear + pressEnter 完整实现",
+    "fix": "新建（v4.0.4 WEBPILOT_MODIFICATION_GUIDE）",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_eval": {
+    "status": "complete",
+    "severity": "P0",
+    "reason": "16 种 FORBIDDEN patterns 安全检查完整实现",
+    "fix": "已修复（v4.0.4 WEBPILOT_MODIFICATION_GUIDE）",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_fetch": {
+    "status": "complete",
+    "severity": "P0",
+    "reason": "enable/disable/list/intercept 四种 action 全部实现",
+    "fix": "已修复（v4.0.4 WEBPILOT_MODIFICATION_GUIDE）",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_websocket": {
+    "status": "complete",
+    "severity": "P1",
+    "reason": "WebSocketFrameReceived/Sent/Error 全局事件监听已实现",
+    "fix": "已修复（v4.0.4 WEBPILOT_MODIFICATION_GUIDE）",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_screencast": {
+    "status": "complete",
+    "severity": "P1",
+    "reason": "screencastFrame 帧写入磁盘 + JPEG 编码完整实现",
+    "fix": "已修复（v4.0.4 WEBPILOT_MODIFICATION_GUIDE）",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_dom_snapshot": {
+    "status": "complete",
+    "severity": "P1",
+    "reason": "DOMSnapshot.captureSnapshot 完整实现",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_console_messages": {
+    "status": "complete",
+    "severity": "P0",
+    "reason": "Runtime.getConsoleMessages 完整实现，daemon console-stream 已接入",
+    "fix": "已实现（v4.0.4 B1-9）",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_network": {
+    "status": "complete",
+    "severity": "P0",
+    "reason": "daemon network-store 已接入，SSE 流式推送，详情/重放/拦截全实现",
+    "fix": "已实现（v4.0.4 B2-17）",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_debugger": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "Debugger.enable/setBreakpoint/list 完整实现",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_tracing": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "Tracing.start/stop 完整实现，stop 支持导出到 .json 文件 (v4.0.5 补全)",
+    "fix": "已修复（v4.0.5 补全文件导出）",
+    "lastReviewed": "2026-07-16"
+  },
+  "browser_performance_metrics": {
+    "status": "complete",
+    "severity": "P1",
+    "reason": "Performance.getMetrics 完整实现，含 FPS/Memory/Heap",
+    "fix": "已实现（v4.0.4 B3-33）",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_extract_apis": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "XHR/fetch 拦截 + API template 分组 + URL 规范化完整实现",
+    "fix": "已实现（v4.0.5 重新评估为完整实现）",
+    "lastReviewed": "2026-07-16"
+  },
+  "browser_audit_full": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "Performance metrics + DOM节点 + 内存 + 资源大小完整审计",
+    "fix": "已实现（v4.0.5 重新评估为完整实现）",
+    "lastReviewed": "2026-07-16"
+  },
+  "browser_storage": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "localStorage/sessionStorage/IndexedDB/CacheStorage + quota 全部实现 (v4.0.5 补全 IndexedDB list/get)",
+    "fix": "已修复（v4.0.5 补全 IndexedDB）",
+    "lastReviewed": "2026-07-16"
+  },
+  "browser_a11y": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "无障碍树查询 + 元素 a11y 属性 (Chrome 150 Accessibility 域)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_action": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "页面交互: click / fill / type / hover",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_animation": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "CSS 动画控制: 播放/暂停/速度/查询",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_audits": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "Performance/SEO/Accessibility 审计 (Chrome 150 Audits 域)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_cache_storage": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "Cache Storage 管理: 列出 cache / entries / 删除 (Chrome 150 CacheStorage 域)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_close_tab": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "关闭标签页，含错误处理 (v4.0.5 补全)",
+    "fix": "已修复（v4.0.5 补全错误处理）",
+    "lastReviewed": "2026-07-16"
+  },
+  "browser_connect": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "连接 Chrome CDP，含连接状态检查 + 错误处理 (v4.0.5 补全)",
+    "fix": "已修复（v4.0.5 补全错误处理）",
+    "lastReviewed": "2026-07-16"
+  },
+  "browser_console": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "Enable Console.log 监听 (CDP Console.enable)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_console_log": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "Console 拦截 + 严重性过滤 (Chrome 150 Log 域)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_cookies": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "Browser-level Cookie 管理 (get/set/clear)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_css": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "CSS 操作: getComputedStyle + stylesheet 读取",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_css_coverage": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "CSS 覆盖率: 找出未使用的 CSS 规则 (Chrome 150 CSSCoverage)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_debugger_remove": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "移除断点 (alias of browser_debugger remove)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_debugger_resume": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "Debugger.resume + 错误处理完整实现 (v4.0.5 重新评估)",
+    "fix": "已实现（v4.0.5 重新评估为完整）",
+    "lastReviewed": "2026-07-16"
+  },
+  "browser_debugger_select_frame": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "Debugger.setAsyncCallStackDepth + Page.getFrameTree frame 查找 (v4.0.5 补全 CDP 调用)",
+    "fix": "已修复（v4.0.5 补全真实 CDP 调用）",
+    "lastReviewed": "2026-07-16"
+  },
+  "browser_dialog": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "预设置弹窗处理 (accept/dismiss/clear) — 弹窗后自动应用",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_disconnect": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "断开 Chrome CDP 连接，含错误处理 (v4.0.5 补全)",
+    "fix": "已修复（v4.0.5 补全错误处理）",
+    "lastReviewed": "2026-07-16"
+  },
+  "browser_doctor": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "健康检查: Chrome CDP + 版本 + Node",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_dom": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "Document object model operations: querySelector, querySelectorAll",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_dom_breakpoint": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "DOM 修改断点: 子树/属性/节点删除时暂停 (Chrome 150 DOMDebugger 增强)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_drag": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "拖拽 (mouse.move + drag)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_dump_js": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "提取 window.* 全局 / inline scripts / 函数 (§3.5.1 前端逆向)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_dump_structure": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "提取页面结构 + 表单 + 链接 + meta + 入口点 (§3.5.1 前端逆向)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_emulation": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "设备/网络/UA 模拟",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_fill_form": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "批量填充多字段表单",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_headless": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "新 Headless 模式控制: beginFrame/Screenshot (Chrome 150 HeadlessExperimental 域)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_health": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "CDP 连接检查 + tabs 列表，含错误处理 (v4.0.5 重新评估)",
+    "fix": "已实现（v4.0.5 重新评估为完整）",
+    "lastReviewed": "2026-07-16"
+  },
+  "browser_heap": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "Heap snapshot: snapshot/summary",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_heap_retainers": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "查找指定节点的 retainers (简化: 基于 .heapsnapshot JSON)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_heap_retaining_paths": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "查找 GC root → nodeName 的保留路径 (简化)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_heap_summary": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "读取 .heapsnapshot 返回摘要",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_hover": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "Hover element via mouseMoved + getBoundingClientRect + scrollIntoView",
+    "fix": "已实现（v4.0.5 重新评估为完整）",
+    "lastReviewed": "2026-07-16"
+  },
+  "browser_indexeddb": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "IndexedDB 高级操作: list databases/stores/get all (Chrome 150 IndexedDB 域)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_install": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "安装健康检查，含 CDP 连接验证 + 版本号",
+    "fix": "已实现（v4.0.5 重新评估为完整）",
+    "lastReviewed": "2026-07-16"
+  },
+  "browser_intercept": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "Fetch 拦截 — 启用/禁用 拦截指定 URL pattern",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_js_heap_node": {
+    "status": "experimental",
+    "severity": "P2",
+    "reason": "占位工具，提示使用 browser_heap_summary + browser_heap_retainers + browser_heap_retaining_paths 替代",
+    "fix": "标记为实验性（v4.0.5），实际功能由 heap 系列工具提供",
+    "lastReviewed": "2026-07-16"
+  },
+  "browser_layer_tree": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "图层树查询: 合成层 + 性能调试 (Chrome 150 LayerTree 域)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_list_tabs": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "列出 Chrome 标签页 (alias of browser_tabs list)，含错误处理 (v4.0.5 补全)",
+    "fix": "已修复（v4.0.5 补全错误处理）",
+    "lastReviewed": "2026-07-16"
+  },
+  "browser_memory": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "内存状态查询 + 压力模拟 (Chrome 150 Memory 域)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_network_get": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "查 network request 详情 (delegates to browser_network action=get)",
+    "fix": "已实现（v4.0.5 重新评估为完整）",
+    "lastReviewed": "2026-07-16"
+  },
+  "browser_new_tab": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "创建新标签页，含错误处理 + URL 参数 (v4.0.5 补全)",
+    "fix": "已修复（v4.0.5 补全错误处理）",
+    "lastReviewed": "2026-07-16"
+  },
+  "browser_overlay": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "DOM Overlay 控制: 高亮/查询布局 (Chrome 150 Overlay 域)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_press_key": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "按单个键 (Enter/Tab/Escape/...)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_request_blocking": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "屏蔽 URL 模式 (Network.blockedUrls) (Chrome 150 Network 域增强)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_request_initiator": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "查 network request 的发起者信息 (delegates to browser_network action=initiator)",
+    "fix": "已实现（v4.0.5 重新评估为完整）",
+    "lastReviewed": "2026-07-16"
+  },
+  "browser_resize": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "调整 viewport 大小",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_script": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "页面加载的脚本源码操作 (list/get/search)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_security": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "安全状态查询: HTTPS/证书/不安全内容 (Chrome 150 Security 域)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_service_worker": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "Service Worker 管理: 列表/停止/取消注册 (Chrome 150)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_set_enabled": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "开启/关闭 browser-bridge 插件 (enable/disable CDP 连接)",
+    "fix": "已实现（v4.0.5 重新评估为完整）",
+    "lastReviewed": "2026-07-16"
+  },
+  "browser_setup": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "初始化检查: CDP 连接 + tabs 列表 + 版本号 + 状态",
+    "fix": "已实现（v4.0.5 重新评估为完整）",
+    "lastReviewed": "2026-07-16"
+  },
+  "browser_snapshot": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "获取页面的 accessibility tree (accessibleName + role)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_state": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "Bridge 内部状态 (connected/tabs/pending)，通过 getState() 获取",
+    "fix": "已实现（v4.0.5 重新评估为完整）",
+    "lastReviewed": "2026-07-16"
+  },
+  "browser_tabs": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "管理 Chrome 标签页: list / open / close",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_target": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "Target attach/detach/send-command (iframe / SW / OOP)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_upload": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "通过 <input type=file> 上传文件",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_wait": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "轮询等待页面 JavaScript 条件为 true",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_wait_for": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "Wait for element by CSS selector / text content",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_xhr_break": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "XHR/fetch 断点 (按 URL pattern)",
+    "fix": "已实现",
+    "lastReviewed": "2026-07-09"
+  },
+  "browser_fs_list": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "列出目录中的文件与文件夹，支持递归 (v4.0.5 新增追踪)",
+    "fix": "新建（v4.0.5 补充到 TOOL_STATUS）",
+    "lastReviewed": "2026-07-16"
+  },
+  "browser_fs_read": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "读取文件内容，支持自定义编码 (v4.0.5 新增追踪)",
+    "fix": "新建（v4.0.5 补充到 TOOL_STATUS）",
+    "lastReviewed": "2026-07-16"
+  },
+  "browser_fs_write": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "写入内容到文件，支持自定义编码 (v4.0.5 新增追踪)",
+    "fix": "新建（v4.0.5 补充到 TOOL_STATUS）",
+    "lastReviewed": "2026-07-16"
+  },
+  "browser_git_diff": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "Git 文件差异查询 (v4.0.5 新增追踪)",
+    "fix": "新建（v4.0.5 补充到 TOOL_STATUS）",
+    "lastReviewed": "2026-07-16"
+  },
+  "browser_git_log": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "Git 提交历史查询 (v4.0.5 新增追踪)",
+    "fix": "新建（v4.0.5 补充到 TOOL_STATUS）",
+    "lastReviewed": "2026-07-16"
+  },
+  "browser_git_status": {
+    "status": "complete",
+    "severity": "P2",
+    "reason": "Git 工作区状态查询 (v4.0.5 新增追踪)",
+    "fix": "新建（v4.0.5 补充到 TOOL_STATUS）",
+    "lastReviewed": "2026-07-16"
+  }
+}

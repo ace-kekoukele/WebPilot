@@ -1,0 +1,48 @@
+{
+  "name": "@webpilot/app",
+  "version": "4.0.5",
+  "description": "WebPilot — 通用 Chrome DevTools Protocol 桥。70+ 工具覆盖页面操控、网络、JS 调试、堆、WebSocket。多 Agent 自动接入 (Claude/Cursor/Hermes/Max/OpenAI/...)。MCP Streamable HTTP + OpenAPI 3.0 + 桌面 GUI (Mac 级工业设计 · shadcn/ui · Inter/Noto Sans SC · framer-motion)。",
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "node --check daemon/main.js electron/main.cjs electron/preload.cjs electron/menu.cjs electron/tray.cjs",
+    "daemon": "node daemon/main.js",
+    "electron": "electron electron/main.cjs",
+    "dist": "electron-builder --win",
+    "dist:dir": "electron-builder --dir"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "ws": "^8.21.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.2",
+    "@testing-library/react": "^16.1.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "^2.1.9",
+    "clsx": "^2.1.1",
+    "electron": "^32.3.3",
+    "electron-builder": "^26.15.3",
+    "framer-motion": "^11.18.2",
+    "jsdom": "^25.0.1",
+    "lucide-react": "^0.469.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "sonner": "^1.7.1",
+    "tailwind-merge": "^2.5.5",
+    "tailwindcss": "^4.3.2",
+    "vite": "^5.4.21",
+    "vitest": "^2.1.9"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "author": "WebPilot",
+  "license": "MIT"
+}
