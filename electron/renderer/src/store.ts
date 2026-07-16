@@ -103,12 +103,40 @@ export const store = {
     setState({ currentSessionId: id });
     saveCurrentSession(id);
   },
+  deleteSession: (id: string) => {
+    setState((s) => {
+      const sessions = s.chatSession.filter((x) => x.id !== id);
+      saveHistory(sessions);
+      const nextId = s.currentSessionId === id
+        ? (sessions.length > 0 ? sessions[0].id : null)
+        : s.currentSessionId;
+      saveCurrentSession(nextId);
+      return { chatSession: sessions, currentSessionId: nextId };
+    });
+  },
+  renameSession: (id: string, title: string) => {
+    setState((s) => {
+      const sessions = s.chatSession.map((x) =>
+        x.id === id ? { ...x, title } : x,
+      );
+      saveHistory(sessions);
+      return { chatSession: sessions };
+    });
+  },
   setChatDraftPrompt: (p: string | null) => setState({ chatDraftPrompt: p }),
   pushMessage: (sessId: string, msg: any) =>
     setState((s) => {
       const sessions = s.chatSession.map((x) =>
         x.id === sessId ? { ...x, messages: [...x.messages, msg] } : x,
       );
+      // 自动根据第一条用户消息更新会话标题
+      const sess = sessions.find(x => x.id === sessId);
+      if (sess && sess.messages.filter((m: any) => m.role === 'user').length === 1 && sess.title.startsWith('会话 ')) {
+        const firstUserMsg = sess.messages.find((m: any) => m.role === 'user');
+        if (firstUserMsg) {
+          sess.title = (firstUserMsg.content || '').slice(0, 30) || sess.title;
+        }
+      }
       saveHistory(sessions);
       return { chatSession: sessions };
     }),

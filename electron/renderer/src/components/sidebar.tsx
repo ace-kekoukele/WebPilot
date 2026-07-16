@@ -1,19 +1,22 @@
-// src/components/sidebar.tsx — 52px 侧栏, lucide 图标 + hover tooltips + framer-motion pill 指示器
-import { Globe, MessageSquare, ListTree, Activity, Sparkles, type LucideIcon } from 'lucide-react';
+// src/components/sidebar.tsx — Refined sidebar navigation
+// 56px, pill indicator, tooltip with keyboard shortcut
+import { Globe, MessageSquare, Workflow, Activity, Sparkles, type LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '../lib/cn';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 
-const ITEMS: Array<{
+interface NavItem {
   mode: 'browser' | 'chat' | 'automation' | 'monitor';
   icon: LucideIcon;
   label: string;
   shortcut: string;
   desc: string;
-}> = [
-  { mode: 'browser', icon: Globe, label: '浏览器', shortcut: 'Ctrl+1', desc: '操作 Chrome 浏览器' },
-  { mode: 'chat', icon: MessageSquare, label: '助手', shortcut: 'Ctrl+2', desc: 'AI 聊天 + 工具调用' },
-  { mode: 'automation', icon: ListTree, label: '自动化', shortcut: 'Ctrl+3', desc: '工作流 / 录制 / 模板' },
+}
+
+const ITEMS: NavItem[] = [
+  { mode: 'browser', icon: Globe, label: '浏览器', shortcut: 'Ctrl+1', desc: '操控 Chrome 浏览器' },
+  { mode: 'chat', icon: MessageSquare, label: '对话', shortcut: 'Ctrl+2', desc: 'AI 对话与工具调用' },
+  { mode: 'automation', icon: Workflow, label: '自动化', shortcut: 'Ctrl+3', desc: '工作流 / 录制 / 模板' },
   { mode: 'monitor', icon: Activity, label: '监控', shortcut: 'Ctrl+4', desc: '日志 / 网络 / Console' },
 ];
 
@@ -24,9 +27,9 @@ interface Props {
 
 export function Sidebar({ mode, onChange }: Props) {
   return (
-    <TooltipProvider delayDuration={300}>
-      <aside className="flex h-full w-[52px] flex-col items-center border-r border-border bg-card/50 py-2">
-        {ITEMS.map((it) => {
+    <TooltipProvider delayDuration={400}>
+      <aside className="sidebar">
+        {ITEMS.map(it => {
           const Icon = it.icon;
           const active = mode === it.mode;
           return (
@@ -35,8 +38,8 @@ export function Sidebar({ mode, onChange }: Props) {
                 <button
                   onClick={() => onChange(it.mode)}
                   className={cn(
-                    'relative flex h-10 w-10 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                    active && 'text-foreground'
+                    'nav-item',
+                    active && 'active'
                   )}
                   aria-label={it.label}
                   aria-current={active ? 'page' : undefined}
@@ -44,40 +47,44 @@ export function Sidebar({ mode, onChange }: Props) {
                   {active && (
                     <motion.span
                       layoutId="sidebar-pill"
-                      className="absolute inset-0 rounded-md bg-accent"
-                      transition={{ type: 'spring', bounce: 0.18, duration: 0.4 }}
+                      className="absolute inset-1 rounded-md bg-primary"
+                      transition={{ type: 'spring', bounce: 0.15, duration: 0.35 }}
                     />
                   )}
-                  <Icon className="relative h-4 w-4" strokeWidth={1.75} />
+                  <Icon className="nav-icon relative z-10" strokeWidth={1.75} />
+                  <span className="nav-label relative z-10">{it.label}</span>
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="right">
+              <TooltipContent side="right" className="max-w-[180px]">
                 <div className="text-xs">
-                  <div className="font-medium">{it.label}</div>
+                  <div className="font-semibold">{it.label}</div>
                   <div className="text-muted-foreground">{it.desc}</div>
-                  <div className="mt-0.5 text-[10px] text-muted-foreground/60">{it.shortcut}</div>
+                  <kbd className="mt-1 inline-block rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground">
+                    {it.shortcut}
+                  </kbd>
                 </div>
               </TooltipContent>
             </Tooltip>
           );
         })}
 
-        <div className="flex-1" />
+        <div className="sidebar-spacer" />
 
         <Tooltip>
           <TooltipTrigger asChild>
             <button
               onClick={() => onChange('wizard')}
               className={cn(
-                'flex h-10 w-10 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground',
-                mode === 'wizard' && 'bg-accent text-foreground'
+                'nav-item',
+                mode === 'wizard' && 'active'
               )}
-              aria-label="首次设置向导"
+              aria-label="设置向导"
             >
-              <Sparkles className="h-4 w-4" strokeWidth={1.75} />
+              <Sparkles className="nav-icon relative z-10" strokeWidth={1.75} />
+              <span className="nav-label relative z-10">向导</span>
             </button>
           </TooltipTrigger>
-          <TooltipContent side="right">设置向导</TooltipContent>
+          <TooltipContent side="right">首次设置向导</TooltipContent>
         </Tooltip>
       </aside>
     </TooltipProvider>
