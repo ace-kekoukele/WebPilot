@@ -197,12 +197,9 @@ function createMainWindow() {
 
   mainWindow.on('closed', () => { mainWindow = null; });
 
-  if (isDev) {
-    mainWindow.loadURL('http://127.0.0.1:5173/');
-  } else {
-    console.log('[electron] loadFile:', DIST_PATH);
-    mainWindow.loadFile(DIST_PATH);
-  }
+  // 开发模式下也直接加载已构建的 dist/index.html，避免 Vite dev server 连接失败导致黑屏
+  console.log('[electron] loadFile:', DIST_PATH);
+  mainWindow.loadFile(DIST_PATH);
 }
 
 app.whenReady().then(() => {

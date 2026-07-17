@@ -66,7 +66,7 @@ export function BrowserPanel({ tools }: Props) {
     if (!url) return;
     setBusy(true);
     try {
-      const targetId = firstTargetId();
+      let targetId = firstTargetId();
       if (!targetId) {
         pushToast({
           kind: 'warn',
@@ -75,12 +75,41 @@ export function BrowserPanel({ tools }: Props) {
         });
         return;
       }
-      await apiPost('/api/tools/call', { name: 'browser_navigate', args: { url, targetId } });
+      try {
+        await apiPost('/api/tools/call', { name: 'browser_navigate', args: { url, targetId } });
+      } catch (innerErr: any) {
+        // 如果 session 不存在（标签页关闭/刷新后 targetId 变了），刷新 tab 列表并重试
+        if (innerErr.message?.includes('未找到 targetId 对应的 session') || innerErr.message?.includes('E_SESSION_NOT_FOUND')) {
+          await refreshTabs();
+          targetId = firstTargetId();
+          if (!targetId) {
+            pushToast({ kind: 'warn', title: '没有可用标签页', description: '请打开一个新网页后重试' });
+            return;
+          }
+          await apiPost('/api/tools/call', { name: 'browser_navigate', args: { url, targetId } });
+        } else {
+          throw innerErr;
+        }
+      }
       pushToast({ kind: 'success', title: '✓ 已跳转', description: url });
     } catch (e: any) {
       pushToast({ kind: 'error', title: `跳转失败: ${e.message}` });
     } finally {
       setBusy(false);
+    }
+  };
+
+  const callWithRetry = async (toolName: string, args: Record<string, any>): Promise<any> => {
+    try {
+      return await apiPost('/api/tools/call', { name: toolName, args });
+    } catch (e: any) {
+      if (e.message?.includes('未找到 targetId 对应的 session') || e.message?.includes('E_SESSION_NOT_FOUND')) {
+        await refreshTabs();
+        const newTargetId = firstTargetId();
+        if (!newTargetId) throw new Error('没有可用标签页，请打开网页后重试');
+        return await apiPost('/api/tools/call', { name: toolName, args: { ...args, targetId: newTargetId } });
+      }
+      throw e;
     }
   };
 
@@ -92,7 +121,7 @@ export function BrowserPanel({ tools }: Props) {
         pushToast({ kind: 'warn', title: 'Chrome 未连接', description: '先连接 Chrome' });
         return;
       }
-      const r: any = await apiPost('/api/tools/call', { name: 'browser_screenshot', args: { targetId, format: 'png' } });
+      const r: any = await callWithRetry('browser_screenshot', { targetId, format: 'png' });
       // daemon 通常返回 { value: { data: 'base64...' } } 或 { value: 'data:image/png;base64,...' }
       const v = r?.value;
       const dataUrl = typeof v === 'string' ? v : (v?.data ? `data:image/${v.format || 'png'};base64,${v.data}` : null);
@@ -117,7 +146,7 @@ export function BrowserPanel({ tools }: Props) {
         pushToast({ kind: 'warn', title: 'Chrome 未连接' });
         return;
       }
-      const r: any = await apiPost('/api/tools/call', { name: 'browser_dom_snapshot', args: { targetId } });
+      const r: any = await callWithRetry('browser_dom_snapshot', { targetId });
       const v = r?.value;
       const text = typeof v === 'string' ? v : (v?.html || v?.snapshot || JSON.stringify(v, null, 2));
       setDomSnapshot(text || '(空)');
@@ -137,7 +166,7 @@ export function BrowserPanel({ tools }: Props) {
         pushToast({ kind: 'warn', title: 'Chrome 未连接' });
         return;
       }
-      await apiPost('/api/tools/call', { name: 'browser_script', args: {
+      await callWithRetry('browser_script', {
         targetId,
         expression: `(() => {
           if (window.__webpilotPicking) return 'already picking';
@@ -162,7 +191,7 @@ export function BrowserPanel({ tools }: Props) {
           }, true);
           return 'picker attached';
         })()`,
-      } });
+      });
       pushToast({ kind: 'info', title: '元素选择器已激活', description: '在 Chrome 页面点目标元素, Esc 取消。选中结果在 Console 看' });
     } catch (e: any) {
       pushToast({ kind: 'error', title: `选择器失败: ${e.message}` });

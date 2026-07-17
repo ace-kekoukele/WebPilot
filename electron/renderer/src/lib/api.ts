@@ -9,6 +9,43 @@ export class ApiError extends Error {
   }
 }
 
+// daemon HTTP API 基础地址
+// - Vite dev server 模式下通过 proxy 代理 /api → http://127.0.0.1:9224
+// - 打包 / file 协议直接加载时，需要动态探测 daemon 实际占用的 HTTP 端口
+let _apiBase: string | null = null;
+
+async function probeHttpPort(): Promise<string> {
+  // daemon 可能把 HTTP 端口放在 9224/9225/9226/9227 中的任意一个，取决于历史启动顺序
+  const ports = [9224, 9225, 9226, 9227];
+  for (const port of ports) {
+    try {
+      const r = await fetch(`http://127.0.0.1:${port}/api/health`, { method: 'GET' });
+      if (r.ok && (await r.json()).ok === true) {
+        console.log(`[api] daemon HTTP API found on port ${port}`);
+        return `http://127.0.0.1:${port}`;
+      }
+    } catch { /* try next port */ }
+  }
+  // fallback 到 9224，让后续请求失败时能返回错误信息
+  console.warn('[api] 未探测到 daemon HTTP 端口，fallback 9224');
+  return 'http://127.0.0.1:9224';
+}
+
+async function getApiBase(): Promise<string> {
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    return ''; // Vite dev server 代理模式
+  }
+  if (_apiBase) return _apiBase;
+  _apiBase = await probeHttpPort();
+  return _apiBase;
+}
+
+async function resolveUrl(path: string): Promise<string> {
+  const base = await getApiBase();
+  if (!base) return path;
+  return base + path;
+}
+
 async function parseBody(r: Response): Promise<any> {
   const ct = r.headers.get('content-type') || '';
   if (ct.includes('json')) {
@@ -35,7 +72,7 @@ async function fail(r: Response | null, fallback: string): Promise<never> {
 export async function apiGet(path: string): Promise<any> {
   let r: Response;
   try {
-    r = await fetch(path);
+    r = await fetch(await resolveUrl(path));
   } catch (e: any) {
     throw new ApiError(`daemon 没起 (${e?.message || '网络失败'}) — 右键托盘 → 修复`, 0, 'network');
   }
@@ -46,7 +83,7 @@ export async function apiGet(path: string): Promise<any> {
 export async function apiPost(path: string, body?: any): Promise<any> {
   let r: Response;
   try {
-    r = await fetch(path, {
+    r = await fetch(await resolveUrl(path), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body || {}),
@@ -61,7 +98,7 @@ export async function apiPost(path: string, body?: any): Promise<any> {
 export async function apiDelete(path: string): Promise<any> {
   let r: Response;
   try {
-    r = await fetch(path, { method: 'DELETE' });
+    r = await fetch(await resolveUrl(path), { method: 'DELETE' });
   } catch (e: any) {
     throw new ApiError(`daemon 没起 (${e?.message || '网络失败'}) — 右键托盘 → 修复`, 0, 'network');
   }
