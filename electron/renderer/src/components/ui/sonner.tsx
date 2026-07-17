@@ -1,12 +1,15 @@
 // src/components/ui/sonner.tsx — shadcn Sonner Toaster (主题对齐 token)
 import { Toaster as Sonner, type ToasterProps } from 'sonner';
+import { useTheme } from '../theme-provider';
 
 const Toaster = ({ ...props }: ToasterProps) => {
+  const { theme } = useTheme();
   return (
     <Sonner
-      theme="dark"
+      theme={theme}
       className="toaster group"
       position="bottom-right"
+      closeButton
       toastOptions={{
         classNames: {
           toast:

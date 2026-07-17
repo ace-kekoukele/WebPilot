@@ -25,7 +25,7 @@ type Mode = 'dashboard' | 'browser' | 'chat' | 'automation' | 'monitor' | 'wizar
 
 const WHATS_NEW_KEY = 'webpilot-seen-whats-new';
 const FIRST_LAUNCH_KEY = 'webpilot-first-launch-done';
-const CURRENT_VERSION = '4.0.4';
+const CURRENT_VERSION = '4.0.5';
 
 const MODE_TRANSITION = {
   initial: { opacity: 0, y: 8 },

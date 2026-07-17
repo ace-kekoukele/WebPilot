@@ -9,17 +9,27 @@ export interface Toast {
   description?: string;
   duration?: number;
   actions?: Array<{ label: string; onClick: () => void }>;
+  dismissLabel?: string;
 }
 
 let _id = 0;
 export function pushToast(t: Omit<Toast, 'id'>) {
   _id++;
   const duration = t.duration ?? 4000;
-  const opts: any = { duration, id: String(_id) };
+  const id = String(_id);
+  const opts: any = { duration, id, closeButton: true };
   if (t.description) opts.description = t.description;
+
   if (t.actions && t.actions.length > 0) {
-    opts.action = { label: t.actions[0].label, onClick: () => { t.actions![0].onClick(); toast.dismiss(String(_id)); } };
+    opts.action = {
+      label: t.actions[0].label,
+      onClick: () => { t.actions![0].onClick(); toast.dismiss(id); },
+    };
   }
+  opts.cancel = {
+    label: t.dismissLabel ?? '关闭',
+    onClick: () => toast.dismiss(id),
+  };
 
   if (t.kind === 'success') toast.success(t.title, opts);
   else if (t.kind === 'error') toast.error(t.title, opts);

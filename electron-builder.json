@@ -16,7 +16,9 @@
     "package-lock.json",
     "!**/*.bak",
     "!**/*.test.js",
-    "!**/__tests__/**"
+    "!**/__tests__/**",
+    "!electron/renderer/dist",
+    "!electron/renderer/dist/**/*"
   ],
   "asarUnpack": [
     "package.json",

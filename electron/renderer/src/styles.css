@@ -42,126 +42,141 @@
   src: url('/fonts/noto-sc/noto-sans-sc-chinese-simplified-700-normal.woff2') format('woff2');
 }
 
-@theme inline {
-  --font-sans: 'Inter Variable', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
-
-  /* Tailwind v4 shadcn 对齐 — 暗色默认 */
-  --color-background: hsl(240 10% 4%);
-  --color-foreground: hsl(0 0% 98%);
-
-  --color-card: hsl(240 6% 10%);
-  --color-card-foreground: hsl(0 0% 98%);
-
-  --color-popover: hsl(240 6% 10%);
-  --color-popover-foreground: hsl(0 0% 98%);
-
-  --color-primary: hsl(238 84% 67%);
+/* ═══════════════════════════════════════════════════
+ * 暗色默认 CSS 变量 — :root 层
+ * ═══════════════════════════════════════════════════ */
+:root {
+  --color-background: hsl(228 30% 3.5%);
+  --color-foreground: hsl(220 20% 94%);
+  --color-card: hsl(228 25% 6%);
+  --color-card-foreground: hsl(220 20% 94%);
+  --color-popover: hsl(228 20% 9%);
+  --color-popover-foreground: hsl(220 20% 94%);
+  --color-primary: hsl(345 85% 65%);
   --color-primary-foreground: hsl(0 0% 100%);
-
-  --color-secondary: hsl(240 4% 16%);
-  --color-secondary-foreground: hsl(0 0% 98%);
-
-  --color-muted: hsl(240 4% 16%);
-  --color-muted-foreground: hsl(240 5% 65%);
-
-  --color-accent: hsl(240 4% 16%);
-  --color-accent-foreground: hsl(0 0% 98%);
-
-  --color-destructive: hsl(0 63% 50%);
+  --color-secondary: hsl(228 15% 13%);
+  --color-secondary-foreground: hsl(220 20% 94%);
+  --color-muted: hsl(228 12% 15%);
+  --color-muted-foreground: hsl(225 10% 58%);
+  --color-accent: hsl(228 15% 17%);
+  --color-accent-foreground: hsl(220 20% 94%);
+  --color-destructive: hsl(0 72% 58%);
   --color-destructive-foreground: hsl(0 0% 98%);
-
-  --color-success: hsl(142 71% 45%);
+  --color-success: hsl(160 75% 50%);
   --color-success-foreground: hsl(0 0% 100%);
-
-  --color-warning: hsl(38 92% 50%);
+  --color-warning: hsl(42 95% 58%);
   --color-warning-foreground: hsl(0 0% 100%);
-
-  --color-border: hsl(240 4% 16%);
-  --color-input: hsl(240 4% 16%);
-  --color-ring: hsl(238 84% 67%);
-
-  --radius: 0.5rem;
+  --color-border: hsl(228 12% 15%);
+  --color-input: hsl(228 12% 15%);
+  --color-ring: hsl(210 90% 60%);
+  --radius: 0.625rem;
 }
 
-/* Light theme — 完整覆盖每一个变量 */
+/* ═══════════════════════════════════════════════════
+ * 亮色主题覆盖 — data-theme-mode="light"
+ * ═══════════════════════════════════════════════════ */
 [data-theme-mode="light"], .light {
-  --color-background: hsl(0 0% 100%);
-  --color-foreground: hsl(240 10% 4%);
-
+  --color-background: hsl(228 30% 97%);
+  --color-foreground: hsl(228 20% 8%);
   --color-card: hsl(0 0% 100%);
-  --color-card-foreground: hsl(240 10% 4%);
-
+  --color-card-foreground: hsl(228 20% 8%);
   --color-popover: hsl(0 0% 100%);
-  --color-popover-foreground: hsl(240 10% 4%);
-
-  --color-primary: hsl(238 84% 60%);
+  --color-popover-foreground: hsl(228 20% 8%);
+  --color-primary: hsl(345 80% 55%);
   --color-primary-foreground: hsl(0 0% 100%);
-
-  --color-secondary: hsl(240 5% 96%);
-  --color-secondary-foreground: hsl(240 10% 4%);
-
-  --color-muted: hsl(240 5% 96%);
-  --color-muted-foreground: hsl(240 4% 46%);
-
-  --color-accent: hsl(240 5% 96%);
-  --color-accent-foreground: hsl(240 10% 4%);
-
-  --color-destructive: hsl(0 84% 60%);
+  --color-secondary: hsl(228 20% 93%);
+  --color-secondary-foreground: hsl(228 20% 8%);
+  --color-muted: hsl(228 20% 93%);
+  --color-muted-foreground: hsl(225 8% 46%);
+  --color-accent: hsl(228 20% 90%);
+  --color-accent-foreground: hsl(228 20% 8%);
+  --color-destructive: hsl(0 78% 55%);
   --color-destructive-foreground: hsl(0 0% 98%);
-
-  --color-success: hsl(142 71% 45%);
+  --color-success: hsl(160 70% 42%);
   --color-success-foreground: hsl(0 0% 100%);
-
-  --color-warning: hsl(38 92% 50%);
+  --color-warning: hsl(42 90% 50%);
   --color-warning-foreground: hsl(0 0% 100%);
+  --color-border: hsl(228 12% 88%);
+  --color-input: hsl(228 12% 88%);
+  --color-ring: hsl(210 85% 55%);
+}
 
-  --color-border: hsl(240 6% 90%);
-  --color-input: hsl(240 6% 90%);
-  --color-ring: hsl(238 84% 60%);
+/* ═══════════════════════════════════════════════════
+ * Tailwind v4 @theme — 引用 CSS 变量 (动态主题关键)
+ * ═══════════════════════════════════════════════════ */
+@theme inline {
+  --font-sans: 'Inter Variable', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+  --color-background: var(--color-background);
+  --color-foreground: var(--color-foreground);
+  --color-card: var(--color-card);
+  --color-card-foreground: var(--color-card-foreground);
+  --color-popover: var(--color-popover);
+  --color-popover-foreground: var(--color-popover-foreground);
+  --color-primary: var(--color-primary);
+  --color-primary-foreground: var(--color-primary-foreground);
+  --color-secondary: var(--color-secondary);
+  --color-secondary-foreground: var(--color-secondary-foreground);
+  --color-muted: var(--color-muted);
+  --color-muted-foreground: var(--color-muted-foreground);
+  --color-accent: var(--color-accent);
+  --color-accent-foreground: var(--color-accent-foreground);
+  --color-destructive: var(--color-destructive);
+  --color-destructive-foreground: var(--color-destructive-foreground);
+  --color-success: var(--color-success);
+  --color-success-foreground: var(--color-success-foreground);
+  --color-warning: var(--color-warning);
+  --color-warning-foreground: var(--color-warning-foreground);
+  --color-border: var(--color-border);
+  --color-input: var(--color-input);
+  --color-ring: var(--color-ring);
+  --radius: 0.625rem;
 }
 
 :root {
-  /* 原 v4.0.2 CSS 变量 — 保留向后兼容,所有现有 panel 引用 */
-  --bg: #0a0a0a;
-  --bg-1: #141416;
-  --bg-2: #1c1c1f;
-  --bg-3: #25252a;
-  --bg-hover: #2e2e34;
-  --border: #2a2a30;
-  --border-strong: #3a3a44;
-  --text: #e5e7eb;
-  --text-2: #b4b4be;
-  --text-3: #7a7a85;
-  --primary: #6366f1;
-  --primary-2: #818cf8;
-  --primary-hover: #4f46e5;
-  --success: #10b981;
-  --warn: #f59e0b;
-  --error: #ef4444;
-  --info: #3b82f6;
-  --gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
-  --shadow-md: 0 4px 12px rgba(0,0,0,.5);
-  --shadow-lg: 0 12px 40px rgba(0,0,0,.6);
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
+  /* Fun Multicolor — 向后兼容 CSS 变量 */
+  --bg: hsl(228 30% 3.5%);
+  --bg-1: hsl(228 25% 5.5%);
+  --bg-2: hsl(228 20% 9%);
+  --bg-3: hsl(228 18% 14%);
+  --bg-hover: hsl(228 18% 18%);
+  --border: hsl(228 15% 16%);
+  --border-strong: hsl(228 15% 25%);
+  --text: hsl(220 20% 94%);
+  --text-2: hsl(225 12% 66%);
+  --text-3: hsl(225 8% 48%);
+  --primary: hsl(345 85% 65%);
+  --primary-2: hsl(345 80% 72%);
+  --primary-hover: hsl(345 75% 58%);
+  --success: hsl(160 75% 50%);
+  --warn: hsl(42 95% 58%);
+  --error: hsl(0 72% 58%);
+  --info: hsl(210 90% 60%);
+  --gradient: linear-gradient(135deg, hsl(345 85% 65%) 0%, hsl(270 75% 62%) 50%, hsl(210 90% 60%) 100%);
+  --gradient-warm: linear-gradient(135deg, hsl(345 85% 65%) 0%, hsl(25 90% 60%) 100%);
+  --gradient-cool: linear-gradient(135deg, hsl(210 90% 60%) 0%, hsl(160 75% 50%) 100%);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.3);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.4);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,.5);
+  --shadow-glow: 0 0 24px hsla(345 85% 65% / 0.12);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
   --transition: 200ms cubic-bezier(.4,.0,.2,1);
 }
 
 [data-theme="light"] {
-  --bg: #fafafa;
+  --bg: hsl(228 30% 97%);
   --bg-1: #ffffff;
-  --bg-2: #f5f5f5;
-  --bg-3: #ebebeb;
-  --bg-hover: #e5e5e5;
-  --border: #e0e0e0;
-  --border-strong: #d0d0d0;
-  --text: #1f1f1f;
-  --text-2: #4b4b4b;
-  --text-3: #8a8a8a;
-  --primary: #4f46e5;
-  --shadow-md: 0 4px 12px rgba(0,0,0,.1);
+  --bg-2: hsl(228 25% 94%);
+  --bg-3: hsl(228 20% 89%);
+  --bg-hover: hsl(228 18% 84%);
+  --border: hsl(228 12% 88%);
+  --border-strong: hsl(228 12% 78%);
+  --text: hsl(228 20% 10%);
+  --text-2: hsl(228 10% 40%);
+  --text-3: hsl(228 8% 55%);
+  --primary: hsl(345 80% 55%);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.08);
 }
 
 * { box-sizing: border-box; }
@@ -189,21 +204,22 @@ body {
 /* ───────── Topbar ───────── */
 .topbar {
   height: 48px;
-  background: var(--bg-1);
-  border-bottom: 1px solid var(--border);
+  background: hsla(228 25% 6% / 0.78);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid hsla(228 20% 30% / 0.25);
   display: flex;
   align-items: center;
   padding: 0 16px;
   flex-shrink: 0;
-  -webkit-app-region: drag;     /* 让顶栏可拖动窗口 (Electron-style) */
+  -webkit-app-region: drag;
 }
 .topbar > * { -webkit-app-region: no-drag; }
-.topbar-left, .topbar-center, .topbar-right { display: flex; align-items: center; gap: 8px; }
+.topbar-left, .topbar-center, .topbar-right { display: flex; align-items: center; gap: 10px; }
 .topbar-center { flex: 1; justify-content: center; }
-.topbar-right { gap: 4px; }
+.topbar-right { gap: 2px; }
 
-.brand { font-weight: 600; font-size: 15px; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.brand-version { color: var(--text-3); font-size: 11px; }
+.brand { font-weight: 700; font-size: 15px; letter-spacing: -0.3px; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.brand-version { background: var(--bg-2); color: var(--text-3); font-size: 10px; font-weight: 500; padding: 2px 6px; border-radius: 4px; }
 
 .hamburger { background: transparent; border: none; color: var(--text-2); font-size: 18px; padding: 4px 8px; cursor: pointer; border-radius: var(--radius-sm); }
 .hamburger:hover { background: var(--bg-3); color: var(--text); }
@@ -217,15 +233,15 @@ body {
 .agent-pill.multicolor { border-color: var(--primary); }
 
 .bridge-status { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-3); }
-.status-dot { width: 8px; height: 8px; border-radius: 50%; }
+.status-dot { width: 7px; height: 7px; border-radius: 50%; box-shadow: 0 0 6px currentColor; }
 
 .icon-btn {
   background: transparent; border: 1px solid transparent; color: var(--text-2);
-  width: 32px; height: 32px; border-radius: var(--radius-sm); cursor: pointer;
+  width: 32px; height: 32px; border-radius: 8px; cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center;
   font-size: 15px; transition: all var(--transition);
 }
-.icon-btn:hover { background: var(--bg-3); color: var(--text); }
+.icon-btn:hover { background: var(--bg-3); color: var(--text); border-color: var(--border); }
 .repair-btn.repair-on { background: var(--warn); color: #1f1f1f; }
 
 /* ───────── Layout ───────── */
@@ -233,24 +249,25 @@ body {
 
 /* ───────── Sidebar ───────── */
 .sidebar {
-  width: 64px; background: var(--bg-1); border-right: 1px solid var(--border);
-  display: flex; flex-direction: column; padding: 8px 4px; gap: 4px;
+  width: 60px; background: var(--bg-1); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; padding: 10px 6px; gap: 2px;
   flex-shrink: 0; overflow-y: auto;
 }
 .sidebar-spacer { flex: 1; }
 .nav-item {
   background: transparent; border: none; padding: 10px 4px;
   display: flex; flex-direction: column; align-items: center; gap: 4px;
-  color: var(--text-3); border-radius: var(--radius-md); cursor: pointer;
-  font-size: 11px; transition: all var(--transition);
+  color: var(--text-3); border-radius: 10px; cursor: pointer;
+  font-size: 11px; transition: all var(--transition); position: relative;
 }
-.nav-item:hover { background: var(--bg-3); color: var(--text); }
+.nav-item:hover { background: var(--bg-2); color: var(--text-2); }
 .nav-item.active {
-  background: var(--primary); color: #fff;
-  box-shadow: var(--shadow-md);
+  background: linear-gradient(135deg, hsla(345 85% 65% / 0.18), hsla(270 75% 62% / 0.14));
+  color: var(--primary-2);
+  box-shadow: inset 0 0 0 1px hsla(345 85% 65% / 0.25), 0 0 12px hsla(345 85% 65% / 0.08);
 }
 .nav-icon { font-size: 20px; line-height: 1; }
-.nav-label { font-size: 10px; }
+.nav-label { font-size: 10px; font-weight: 500; }
 
 /* ───────── Main ───────── */
 .main { flex: 1; min-width: 0; min-height: 0; display: flex; overflow: hidden; }

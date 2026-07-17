@@ -38,40 +38,40 @@ export function TopBar({ theme, onToggleTheme, onOpenPalette, onOpenHelp, onOpen
 
   return (
     <TooltipProvider delayDuration={300}>
-      <header className="flex h-11 items-center justify-between border-b border-border bg-background/80 px-3 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="flex h-12 items-center justify-between border-b border-border/40 bg-background/70 px-4 backdrop-blur-2xl supports-[backdrop-filter]:bg-background/50">
         {/* 左侧: Logo + 版本 + 状态 */}
         <div className="flex items-center gap-3">
-          <span className="text-sm font-semibold tracking-tight">WebPilot</span>
-          <span className="rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground">v4.0.4</span>
+          <span className="text-sm font-bold tracking-tight bg-gradient-to-r from-rose-400 via-violet-400 to-cyan-400 bg-clip-text text-transparent">WebPilot</span>
+          <span className="rounded-md bg-secondary/60 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">v4.0.4</span>
           {/* 健康状态指示器 */}
           <div className="flex items-center gap-1.5">
             {health?.cdpConnected ? (
-              <span className="flex items-center gap-1 text-[10px] text-success">
-                <Wifi className="h-3 w-3" />
+              <span className="flex items-center gap-1.5 text-[10px] text-emerald-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_currentColor]" />
                 <span className="hidden sm:inline">Chrome 已连接</span>
               </span>
             ) : (
-              <span className="flex items-center gap-1 text-[10px] text-destructive">
-                <WifiOff className="h-3 w-3" />
+              <span className="flex items-center gap-1.5 text-[10px] text-red-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-red-400 shadow-[0_0_6px_currentColor]" />
                 <span className="hidden sm:inline">Chrome 未连接</span>
               </span>
             )}
           </div>
           {/* 实时统计 */}
           {recentTotal > 0 && (
-            <div className="hidden md:flex items-center gap-1.5 text-[10px] text-muted-foreground">
+            <div className="hidden md:flex items-center gap-2 text-[10px] text-muted-foreground">
               <Activity className="h-3 w-3" />
-              <span>{recentOk}/{recentTotal}</span>
-              {uptime && <span className="text-muted-foreground/60">· {uptime}</span>}
+              <span className="font-medium">{recentOk}/{recentTotal}</span>
+              {uptime && <span className="text-muted-foreground/50">· {uptime}</span>}
             </div>
           )}
         </div>
 
         {/* 右侧: 工具按钮 */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onOpenSettings} aria-label="端口设置">
+              <Button variant="ghost" size="icon-sm" className="h-8 w-8 rounded-lg" onClick={onOpenSettings} aria-label="端口设置">
                 <Plug className="h-3.5 w-3.5" />
               </Button>
             </TooltipTrigger>
@@ -79,7 +79,7 @@ export function TopBar({ theme, onToggleTheme, onOpenPalette, onOpenHelp, onOpen
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onToggleTheme} aria-label="切换主题">
+              <Button variant="ghost" size="icon-sm" className="h-8 w-8 rounded-lg" onClick={onToggleTheme} aria-label="切换主题">
                 {theme === 'dark' ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
               </Button>
             </TooltipTrigger>
@@ -87,7 +87,7 @@ export function TopBar({ theme, onToggleTheme, onOpenPalette, onOpenHelp, onOpen
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onOpenPalette} aria-label="命令面板">
+              <Button variant="ghost" size="icon-sm" className="h-8 w-8 rounded-lg" onClick={onOpenPalette} aria-label="命令面板">
                 <Command className="h-3.5 w-3.5" />
               </Button>
             </TooltipTrigger>
@@ -95,7 +95,7 @@ export function TopBar({ theme, onToggleTheme, onOpenPalette, onOpenHelp, onOpen
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onOpenHelp} aria-label="帮助">
+              <Button variant="ghost" size="icon-sm" className="h-8 w-8 rounded-lg" onClick={onOpenHelp} aria-label="帮助">
                 <HelpCircle className="h-3.5 w-3.5" />
               </Button>
             </TooltipTrigger>
@@ -103,7 +103,7 @@ export function TopBar({ theme, onToggleTheme, onOpenPalette, onOpenHelp, onOpen
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onOpenRepair} aria-label="一键修复">
+              <Button variant="ghost" size="icon-sm" className="h-8 w-8 rounded-lg" onClick={onOpenRepair} aria-label="一键修复">
                 <Wrench className="h-3.5 w-3.5" />
               </Button>
             </TooltipTrigger>
@@ -111,7 +111,7 @@ export function TopBar({ theme, onToggleTheme, onOpenPalette, onOpenHelp, onOpen
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={openLogs} aria-label="查看日志">
+              <Button variant="ghost" size="icon-sm" className="h-8 w-8 rounded-lg" onClick={openLogs} aria-label="查看日志">
                 <FileText className="h-3.5 w-3.5" />
               </Button>
             </TooltipTrigger>

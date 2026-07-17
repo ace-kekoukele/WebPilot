@@ -2,6 +2,7 @@
 // 增强: 最近使用 + 收藏 + 分类分组
 import { useMemo, useState, useEffect } from 'react';
 import { Settings, Wrench, HelpCircle, Sun, Hash, Star, Clock, type LucideIcon } from 'lucide-react';
+import { useTheme } from './theme-provider';
 import {
   CommandDialog,
   CommandInput,
@@ -27,6 +28,7 @@ export function CommandPalette({ tools, onClose, onToast, onOpenRepair, onOpenSe
   const [activeTool, setActiveTool] = useState<{ name: string; description?: string; parameters?: any } | null>(null);
   const [recentTools, setRecentTools] = useState<string[]>([]);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const { toggle: toggleTheme } = useTheme();
 
   // 加载最近使用和收藏
   useEffect(() => {
@@ -55,8 +57,8 @@ export function CommandPalette({ tools, onClose, onToast, onOpenRepair, onOpenSe
     { kind: '设置', icon: Settings, name: '打开设置', desc: '设置面板', action: onOpenSettings, shortcut: 'Ctrl+,' },
     { kind: '修复', icon: Wrench, name: '一键修复', desc: '修复常见故障', action: onOpenRepair },
     { kind: '帮助', icon: HelpCircle, name: '帮助', desc: '快捷键 / 模板 / FAQ', action: () => onOpenHelp?.(), shortcut: 'F1' },
-    { kind: '主题', icon: Sun, name: '切换主题', desc: '暗 / 亮', action: () => { document.documentElement.classList.toggle('light'); }, shortcut: '' },
-  ], [onOpenSettings, onOpenRepair, onOpenHelp]);
+    { kind: '主题', icon: Sun, name: '切换主题', desc: '暗 / 亮', action: toggleTheme, shortcut: '' },
+  ], [onOpenSettings, onOpenRepair, onOpenHelp, toggleTheme]);
 
   // 收藏工具
   const favTools = useMemo(() =>
