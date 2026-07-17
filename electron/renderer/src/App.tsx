@@ -16,11 +16,12 @@ import { BrowserPanel } from './panels/BrowserPanel';
 import { ChatPanel } from './panels/ChatPanel';
 import { AutomationPanel } from './panels/AutomationPanel';
 import { MonitorPanel } from './panels/MonitorPanel';
-import { store, useAppStore } from './store';
+import { DashboardPanel } from './panels/DashboardPanel';
+import { store, useAppStore, getState } from './store';
 import { useTheme } from './components/theme-provider';
 import { apiGet } from './lib/api';
 
-type Mode = 'browser' | 'chat' | 'automation' | 'monitor' | 'wizard';
+type Mode = 'dashboard' | 'browser' | 'chat' | 'automation' | 'monitor' | 'wizard';
 
 const WHATS_NEW_KEY = 'webpilot-seen-whats-new';
 const FIRST_LAUNCH_KEY = 'webpilot-first-launch-done';
@@ -35,7 +36,7 @@ const MODE_TRANSITION = {
 
 export function App() {
   const firstLaunch = !localStorage.getItem(FIRST_LAUNCH_KEY);
-  const [mode, setMode] = useState<Mode>(firstLaunch ? 'wizard' : 'browser');
+  const [mode, setMode] = useState<Mode>(firstLaunch ? 'wizard' : 'dashboard');
   const { theme, toggle: toggleTheme } = useTheme();
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -56,6 +57,8 @@ export function App() {
     Promise.all([
       apiGet('/api/health').then((h) => {
         store.setHealth(h);
+        // 暴露给 tray.cjs 用于 tooltip
+        (window as any).__webpilotHealth = h;
         const ports = (h as any)?.ports;
         const defaults: any = { cdp: 9222, mcp: 9223, http: 9224, control: 9225 };
         if (ports) {
@@ -81,7 +84,11 @@ export function App() {
     ]).catch(() => {});
 
     const timer = setInterval(() => {
-      apiGet('/api/health').then((h) => store.setHealth(h)).catch(() => {});
+      apiGet('/api/health').then((h) => {
+        store.setHealth(h);
+        // 更新托盘 tooltip 数据
+        (window as any).__webpilotHealth = { ...h, agentCount: getState().agents.length };
+      }).catch(() => {});
       apiGet('/api/agents').then((r) => store.setAgents(r.agents || [])).catch(() => {});
     }, 5000);
     return () => clearInterval(timer);
@@ -93,9 +100,9 @@ export function App() {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k' && !e.shiftKey) {
         e.preventDefault(); setPaletteOpen((v) => !v); return;
       }
-      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && ['1','2','3','4'].includes(e.key)) {
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && ['1','2','3','4','5'].includes(e.key)) {
         e.preventDefault();
-        const map: any = { '1': 'browser', '2': 'chat', '3': 'automation', '4': 'monitor' };
+        const map: any = { '1': 'dashboard', '2': 'browser', '3': 'chat', '4': 'automation', '5': 'monitor' };
         setMode(map[e.key]);
         return;
       }
@@ -125,6 +132,18 @@ export function App() {
     return off;
   }, []);
 
+  // 监听 Dashboard 发出的 nav:mode 事件
+  useEffect(() => {
+    const handler = (e: CustomEvent) => {
+      const m = e.detail as string;
+      if (['dashboard','browser','chat','automation','monitor'].includes(m)) {
+        setMode(m as Mode);
+      }
+    };
+    window.addEventListener('nav:mode', handler as EventListener);
+    return () => window.removeEventListener('nav:mode', handler as EventListener);
+  }, []);
+
   const openRepair = useCallback(() => setRepairOpen(true), []);
 
   return (
@@ -146,11 +165,12 @@ export function App() {
               {...MODE_TRANSITION}
               className="h-full overflow-y-auto"
             >
+              {mode === 'dashboard' && <DashboardPanel />}
               {mode === 'browser' && <BrowserPanel tools={tools} />}
               {mode === 'chat' && <ChatPanel onToast={pushToast} />}
               {mode === 'automation' && <AutomationPanel tools={tools} onSwitchMode={setMode} />}
               {mode === 'monitor' && <MonitorPanel />}
-              {mode === 'wizard' && <Wizard onDone={() => { localStorage.setItem(FIRST_LAUNCH_KEY, '1'); setMode('browser'); }} />}
+              {mode === 'wizard' && <Wizard onDone={() => { localStorage.setItem(FIRST_LAUNCH_KEY, '1'); setMode('dashboard'); }} />}
             </motion.div>
           </AnimatePresence>
         </main>

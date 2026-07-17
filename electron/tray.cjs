@@ -47,10 +47,27 @@ function initTray({ onOpenWindow, onQuit, getWindow }) {
   if (getWindow) {
     setInterval(() => {
       const win = getWindow();
-      if (!tray) return;
+      if (!tray || !win) return;
       const visible = win && win.isVisible() && !win.isMinimized();
-      tray.setToolTip(`WebPilot — ${visible ? '运行中' : '已最小化到托盘'}`);
-    }, 2000);
+      // 尝试从 renderer 获取健康状态来显示更丰富的 tooltip
+      if (visible && !win.isDestroyed()) {
+        win.webContents.executeJavaScript('JSON.stringify(window.__webpilotHealth || null)').then((json) => {
+          if (!json || !tray) return;
+          try {
+            const h = JSON.parse(json);
+            const cdp = h.cdpConnected ? 'Chrome✓' : 'Chrome✗';
+            const agents = (h.agentCount || 0) > 0 ? `${h.agentCount} Agent` : '';
+            const parts = [cdp, agents].filter(Boolean);
+            const status = parts.length > 0 ? parts.join(' · ') : '运行中';
+            tray.setToolTip(`WebPilot — ${status}`);
+          } catch { tray.setToolTip(`WebPilot — ${visible ? '运行中' : '已最小化到托盘'}`); }
+        }).catch(() => {
+          tray.setToolTip(`WebPilot — ${visible ? '运行中' : '已最小化到托盘'}`);
+        });
+      } else {
+        tray.setToolTip('WebPilot — 后台运行中 (Ctrl+Shift+Space 呼出)');
+      }
+    }, 3000);
   }
 
   return tray;

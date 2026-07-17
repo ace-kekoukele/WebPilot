@@ -1,24 +1,25 @@
 // src/components/sidebar.tsx — 52px 侧栏, lucide 图标 + hover tooltips + framer-motion pill 指示器
-import { Globe, MessageSquare, ListTree, Activity, Sparkles, type LucideIcon } from 'lucide-react';
+import { Globe, MessageSquare, ListTree, Activity, Sparkles, LayoutDashboard, type LucideIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '../lib/cn';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 
 const ITEMS: Array<{
-  mode: 'browser' | 'chat' | 'automation' | 'monitor';
+  mode: 'dashboard' | 'browser' | 'chat' | 'automation' | 'monitor';
   icon: LucideIcon;
   label: string;
   shortcut: string;
   desc: string;
 }> = [
-  { mode: 'browser', icon: Globe, label: '浏览器', shortcut: 'Ctrl+1', desc: '操作 Chrome 浏览器' },
-  { mode: 'chat', icon: MessageSquare, label: '助手', shortcut: 'Ctrl+2', desc: 'AI 聊天 + 工具调用' },
-  { mode: 'automation', icon: ListTree, label: '自动化', shortcut: 'Ctrl+3', desc: '工作流 / 录制 / 模板' },
-  { mode: 'monitor', icon: Activity, label: '监控', shortcut: 'Ctrl+4', desc: '日志 / 网络 / Console' },
+  { mode: 'dashboard', icon: LayoutDashboard, label: '仪表盘', shortcut: 'Ctrl+1', desc: '运行状态总览' },
+  { mode: 'browser', icon: Globe, label: '浏览器', shortcut: 'Ctrl+2', desc: '操作 Chrome 浏览器' },
+  { mode: 'chat', icon: MessageSquare, label: '助手', shortcut: 'Ctrl+3', desc: 'AI 聊天 + 工具调用' },
+  { mode: 'automation', icon: ListTree, label: '自动化', shortcut: 'Ctrl+4', desc: '工作流 / 录制 / 模板' },
+  { mode: 'monitor', icon: Activity, label: '监控', shortcut: 'Ctrl+5', desc: '日志 / 网络 / Console' },
 ];
 
 interface Props {
-  mode: 'browser' | 'chat' | 'automation' | 'monitor' | 'wizard';
+  mode: 'dashboard' | 'browser' | 'chat' | 'automation' | 'monitor' | 'wizard';
   onChange: (m: any) => void;
 }
 
