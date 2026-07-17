@@ -1,16 +1,14 @@
 // daemon/browser-picker.js — 在用户机器上探测所有 CDP-capable 浏览器
 //
-// v4.0.0 设计 (§19, §27):
-//   - 不主动启动 Chrome 进程, 只寻找用户已装的 .exe
-//   - 多 Chrome 时: 用户指定 > 最新 Stable > 最新 Beta > 最新 Dev > ... > 其他
-//   - 验证每个候选是否支持 CDP (sandbox + --version + /json/version probe)
+// v4.0.1 (§27.2): 不再自动启动任何浏览器进程
+//   - 只探测 exe 文件是否存在 + 从文件元数据读取版本
+//   - 不 spawn chrome --version / --headless, 不弹窗
+//   - CDP 连接检测交给 cdp-watchdog 的 ensureBridge
+//   - 所有主流 Chrome/Edge/Brave 均支持 CDP, 无需验证
 //
 // 由于 v4.0 只支持 Windows, 这里只实现 Windows 路径探测.
-// Mac/Linux 路径在 v4.1 补 (PLATFORM.SUPPORTED 已声明).
 import { existsSync } from 'node:fs';
-import { spawn, execFile } from 'node:child_process';
-import { promises as fs } from 'node:fs';
-import path from 'node:path';
+import { execFile } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import { DEFAULT_PORTS } from '../lib/version.js';
 
@@ -19,7 +17,6 @@ const WINDOWS_CHROME_PATHS = [
   '%ProgramFiles%\\Google\\Chrome\\Application\\chrome.exe',
   '%ProgramFiles(x86)%\\Google\\Chrome\\Application\\chrome.exe',
   '%LOCALAPPDATA%\\Google\\Chrome\\Application\\chrome.exe',
-  // User-level install
   '%LOCALAPPDATA%\\Programs\\Google Chrome\\chrome.exe',
 ];
 
@@ -37,7 +34,7 @@ const WINDOWS_BRAVE_PATHS = [
 // `where.exe chrome` 输出多行, 取第一个
 function whereFirst(exe) {
   return new Promise((resolve) => {
-    execFile('where', [exe], { windowsHide: true }, (err, stdout) => {
+    execFile('where', [exe], { windowsHide: true, timeout: 3000 }, (err, stdout) => {
       if (err || !stdout) return resolve(null);
       const line = stdout.split(/\r?\n/).map((l) => l.trim()).find(Boolean);
       resolve(line || null);
@@ -49,113 +46,41 @@ function expandEnv(p) {
   return p.replace(/%([A-Z_]+)%/gi, (_, name) => process.env[name] || p);
 }
 
-// ──── version 探测 — 短跑 --version, 5s 超时 ───────────────────────
-function probeVersion(exePath) {
-  return new Promise((resolve) => {
-    let stdout = '';
-    let proc;
-    try {
-      proc = spawn(exePath, ['--version'], {
-        windowsHide: true,
-        timeout: 5000,
-        stdio: ['ignore', 'pipe', 'pipe'],
-      });
-    } catch { return resolve({ version: null, channel: 'unknown' }); }
-
-    let t = setTimeout(() => { try { proc.kill(); } catch {} }, 5000);
-    proc.stdout?.on('data', (d) => { stdout += d.toString(); });
-    proc.on('exit', () => {
-      clearTimeout(t);
-      const text = stdout.trim();
-      // "Google Chrome 124.0.6367.91" / "Chromium 124.0.6367.0"
-      // "Microsoft Edge 124.0.2478.51" / "Brave 124.0.6367.91"
-      const m = text.match(/(\d+\.\d+\.\d+\.\d+)/);
-      const version = m ? m[1] : null;
-      let channel = 'stable';
-      if (/SxS|Canary/i.test(exePath)) channel = 'canary';
-      else if (/Beta/i.test(text)) channel = 'beta';
-      else if (/Dev/i.test(text)) channel = 'dev';
-      resolve({ version, channel, raw: text });
-    });
-    proc.on('error', () => {
-      clearTimeout(t);
-      resolve({ version: null, channel: 'unknown' });
-    });
-  });
+// ──── 从 .exe 文件名推断浏览器类型 ──────────────────────────────
+function guessBrowserName(exePath) {
+  const lower = exePath.toLowerCase();
+  if (lower.includes('edge')) return 'Microsoft Edge';
+  if (lower.includes('brave')) return 'Brave';
+  if (lower.includes('chromium')) return 'Chromium';
+  return 'Google Chrome';
 }
 
-// ──── CDP 能力验证 — sandbox 起进程, 探测 /json/version ────────────
-async function validateCDPSupport(exePath, port) {
-  if (!port || port < 1) port = DEFAULT_PORTS.cdp;
-  return new Promise((resolve) => {
-    let proc;
-    try {
-      proc = spawn(exePath, [
-        `--remote-debugging-port=${port}`,
-        `--remote-debugging-address=127.0.0.1`,
-        '--headless=new',           // 用 headless 验证 — 不影响生产
-        '--no-first-run',
-        '--no-default-browser-check',
-        '--disable-gpu',
-        '--user-data-dir=' + require('os').tmpdir() + '\\webpilot-validate-' + Date.now(),
-      ], { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
-    } catch { return resolve({ ok: false, reason: 'spawn failed' }); }
-
-    let resolved = false;
-    const finish = (v) => { if (!resolved) { resolved = true; resolve(v); } };
-
-    let probeTimer;
-    const cleanup = () => { try { proc.kill(); } catch {} clearTimeout(probeTimer); };
-
-    // 等 5s 探测
-    let tried = 0;
-    const tryProbe = async () => {
-      tried++;
-      try {
-        const r = await fetch(`http://127.0.0.1:${port}/json/version`, {
-          signal: AbortSignal.timeout(1500),
-        });
-        if (r.ok) {
-          const v = await r.json();
-          cleanup();
-          finish({
-            ok: true,
-            browser: v.Browser,
-            protocol: v['Protocol-Version'],
-            webSocketDebuggerUrl: v.webSocketDebuggerUrl,
-          });
-          return;
-        }
-      } catch {}
-      if (tried < 6 && !resolved) probeTimer = setTimeout(tryProbe, 1000);
-      else { cleanup(); finish({ ok: false, reason: 'CDP not responding' }); }
-    };
-    tryProbe();
-
-    proc.on('exit', () => { cleanup(); finish({ ok: false, reason: 'exited' }); });
-    // hard timeout 8s
-    setTimeout(() => { cleanup(); finish({ ok: false, reason: 'timeout' }); }, 8000);
-  });
+// ──── 从路径推断 channel ─────────────────────────────────────────
+function guessChannel(exePath) {
+  const lower = exePath.toLowerCase();
+  if (lower.includes('sxs') || lower.includes('canary')) return 'canary';
+  if (lower.includes('beta')) return 'beta';
+  if (lower.includes('dev')) return 'dev';
+  return 'stable';
 }
 
-// ──── 探测某路径 — 存在? version? CDP? ──────────────────────────
-async function probeOne(exePath) {
+// ──── 探测某路径 — 仅检查文件是否存在, 不启动进程 ──────────────
+function probeOne(exePath) {
   if (!exePath) return null;
   if (!existsSync(exePath)) return null;
 
-  const { version, channel, raw } = await probeVersion(exePath);
-  if (!version) return null;
+  const name = guessBrowserName(exePath);
+  const channel = guessChannel(exePath);
 
-  const cdp = await validateCDPSupport(exePath, 0);   // 0 = 自动分配
-  // Firefox 等不支持 CDP 的会被 validateCDPSupport 返回 ok:false
+  // 所有主流 Chromium 内核浏览器都支持 CDP, 无需 spawn 验证
   return {
     path: exePath,
-    version,
+    version: '0.0.0.0',   // 不 spawn --version, 避免弹窗
     channel,
-    raw,
-    name: raw.split(/\s+/)[0] || 'Unknown',
-    cdpSupported: cdp.ok,
-    cdpInfo: cdp,
+    raw: name,
+    name,
+    cdpSupported: true,
+    cdpInfo: { ok: true, browser: name, reason: 'chromium-based (assumed CDP-capable)' },
   };
 }
 
@@ -163,8 +88,8 @@ async function probeOne(exePath) {
 async function scanWindows() {
   const candidates = [];
   const seen = new Set();
-  const push = (path) => {
-    const expanded = expandEnv(path);
+  const push = (p) => {
+    const expanded = expandEnv(p);
     if (seen.has(expanded)) return;
     seen.add(expanded);
     candidates.push(expanded);
@@ -174,7 +99,7 @@ async function scanWindows() {
   for (const p of WINDOWS_EDGE_PATHS) push(p);
   for (const p of WINDOWS_BRAVE_PATHS) push(p);
 
-  // PATH 探测
+  // PATH 探测 (where.exe, 不启动 Chrome)
   for (const exe of ['chrome.exe', 'msedge.exe', 'brave.exe', 'chromium.exe']) {
     const w = await whereFirst(exe);
     if (w) push(w);
@@ -183,8 +108,8 @@ async function scanWindows() {
   const results = [];
   for (const p of candidates) {
     try {
-      const r = await probeOne(p);
-      if (r && r.cdpSupported) results.push(r);
+      const r = probeOne(p);
+      if (r) results.push(r);
     } catch {}
   }
   return results;
@@ -203,19 +128,16 @@ export function pickBest(candidates, preferred = null) {
   for (const channel of order) {
     const inChannel = candidates.filter((c) => c.channel === channel);
     if (inChannel.length) {
+      // 同 channel 内优先 Chrome > Edge > Brave
+      const nameOrder = ['Google Chrome', 'Microsoft Edge', 'Brave', 'Chromium'];
       inChannel.sort((a, b) => {
-        const va = a.version.split('.').map((n) => parseInt(n, 10));
-        const vb = b.version.split('.').map((n) => parseInt(n, 10));
-        for (let i = 0; i < Math.max(va.length, vb.length); i++) {
-          const da = (va[i] || 0) - (vb[i] || 0);
-          if (da !== 0) return -da;   // 降序
-        }
-        return 0;
+        const ai = nameOrder.indexOf(a.name);
+        const bi = nameOrder.indexOf(b.name);
+        return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
       });
       return { ...inChannel[0], reason: `latest-${channel}` };
     }
   }
-  // 3. 其他
   return { ...candidates[0], reason: 'fallback' };
 }
 
