@@ -19,7 +19,10 @@ async function probeHttpPort(): Promise<string> {
   const ports = [9224, 9225, 9226, 9227];
   for (const port of ports) {
     try {
-      const r = await fetch(`http://127.0.0.1:${port}/api/health`, { method: 'GET' });
+      const r = await fetch(`http://127.0.0.1:${port}/api/health`, {
+        method: 'GET',
+        signal: AbortSignal.timeout(2000),
+      });
       if (r.ok && (await r.json()).ok === true) {
         console.log(`[api] daemon HTTP API found on port ${port}`);
         return `http://127.0.0.1:${port}`;
