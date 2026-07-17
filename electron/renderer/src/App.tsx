@@ -23,6 +23,7 @@ import { apiGet } from './lib/api';
 type Mode = 'browser' | 'chat' | 'automation' | 'monitor' | 'wizard';
 
 const WHATS_NEW_KEY = 'webpilot-seen-whats-new';
+const FIRST_LAUNCH_KEY = 'webpilot-first-launch-done';
 const CURRENT_VERSION = '4.0.4';
 
 const MODE_TRANSITION = {
@@ -33,7 +34,8 @@ const MODE_TRANSITION = {
 };
 
 export function App() {
-  const [mode, setMode] = useState<Mode>('browser');
+  const firstLaunch = !localStorage.getItem(FIRST_LAUNCH_KEY);
+  const [mode, setMode] = useState<Mode>(firstLaunch ? 'wizard' : 'browser');
   const { theme, toggle: toggleTheme } = useTheme();
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -148,7 +150,7 @@ export function App() {
               {mode === 'chat' && <ChatPanel onToast={pushToast} />}
               {mode === 'automation' && <AutomationPanel tools={tools} onSwitchMode={setMode} />}
               {mode === 'monitor' && <MonitorPanel />}
-              {mode === 'wizard' && <Wizard onDone={() => setMode('browser')} />}
+              {mode === 'wizard' && <Wizard onDone={() => { localStorage.setItem(FIRST_LAUNCH_KEY, '1'); setMode('browser'); }} />}
             </motion.div>
           </AnimatePresence>
         </main>

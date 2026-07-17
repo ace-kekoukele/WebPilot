@@ -2,7 +2,7 @@
 // 仅保留 layout + 状态初始化 + 协调 SESSION/SSE/INPUT。
 // SSE 解析逻辑已下沉到 hooks/use-chat-sse.ts (P5 不动 — 这里也不动其内部逻辑)。
 import { useEffect, useState } from 'react';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Globe, Camera, FileText, Code, Search, Lightbulb } from 'lucide-react';
 import { useAppStore, store } from '../store';
 import { apiGet } from '../lib/api';
 import { useAutoScroll } from '../lib/use-auto-scroll';
@@ -12,6 +12,16 @@ import { TypingIndicator } from '../components/chat/typing-indicator';
 import { EmptyState } from '../components/empty-state';
 import { SessionSidebar } from '../components/chat/session-sidebar';
 import { ChatInput } from '../components/chat/chat-input';
+import { cn } from '../lib/cn';
+
+const EXAMPLE_PROMPTS = [
+  { icon: Globe, label: '打开 GitHub 首页并截图', prompt: '请帮我打开 https://github.com 并截一张首页截图' },
+  { icon: Search, label: '搜索并提取信息', prompt: '请帮我搜索"React 19 新特性"，并总结前三个搜索结果的关键信息' },
+  { icon: FileText, label: '抓取页面数据', prompt: '请打开 https://news.ycombinator.com，抓取首页前10条新闻的标题和链接，整理成表格' },
+  { icon: Code, label: '分析页面结构', prompt: '请帮我分析当前页面的 DOM 结构，列出所有主要的交互元素（按钮、输入框、链接）' },
+  { icon: Camera, label: '批量截图多个页面', prompt: '请依次打开 github.com、google.com、bilibili.com，各截一张图' },
+  { icon: Lightbulb, label: '帮我填表单', prompt: '请帮我在当前页面找到表单，并填入测试数据：姓名=张三、邮箱=test@example.com' },
+];
 
 interface Props { onToast: (t: any) => void; }
 
@@ -86,12 +96,36 @@ export function ChatPanel({ onToast }: Props) {
         <div className="flex min-w-0 flex-1 flex-col">
           <div ref={messagesRef} className="flex-1 overflow-y-auto px-4 py-3">
             {messages.length === 0 ? (
-              <EmptyState
-                icon={Sparkles}
-                title="向 AI 提问"
-                description="让 AI 助手帮你操作浏览器 · 例如「打开 github.com 并截图」"
-                className="h-full"
-              />
+              <div className="flex h-full flex-col items-center justify-center gap-6 px-4">
+                <EmptyState
+                  icon={Sparkles}
+                  title="向 AI 提问"
+                  description="让 AI 助手帮你操作浏览器 · 选一个示例或直接输入"
+                  className="border-0"
+                />
+                <div className="grid w-full max-w-lg grid-cols-2 gap-2">
+                  {EXAMPLE_PROMPTS.map((ep, i) => {
+                    const Icon = ep.icon;
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => handleSend(ep.prompt)}
+                        disabled={busy || !activeProvider}
+                        className={cn(
+                          'flex items-start gap-2 rounded-lg border border-border bg-card p-3 text-left transition-all hover:border-primary/50 hover:bg-accent/50',
+                          (!activeProvider) && 'opacity-50 cursor-not-allowed'
+                        )}
+                      >
+                        <Icon className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
+                        <div>
+                          <div className="text-xs font-medium">{ep.label}</div>
+                          <div className="mt-0.5 text-[10px] text-muted-foreground line-clamp-2">{ep.prompt}</div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             ) : (
               <div className="mx-auto max-w-3xl space-y-1">
                 {messages.map((m, i) => {

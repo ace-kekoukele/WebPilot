@@ -1,6 +1,6 @@
-// src/panels/BrowserPanel.tsx — 浏览器模式 (URL 导航 + 真预览 + tab 列表 + 3 按钮)
-import { useState, useEffect, useMemo } from 'react';
-import { Globe, Crosshair, ArrowRight, RefreshCw, ImageIcon, User, Bot, Camera, FileCode, ListTree, Cookie, Copy, ExternalLink, Search, X, Check, type LucideIcon } from 'lucide-react';
+// src/panels/BrowserPanel.tsx — 浏览器模式 (URL 导航 + 真预览 + tab 列表 + 快捷入口 + 截图历史)
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { Globe, Crosshair, ArrowRight, RefreshCw, ImageIcon, User, Bot, Camera, FileCode, ListTree, Cookie, Copy, ExternalLink, Search, X, Check, Download, History, Star, Chrome, Play, Trash2, type LucideIcon } from 'lucide-react';
 import { apiGet, apiPost } from '../lib/api';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -15,19 +15,43 @@ import { cn } from '../lib/cn';
 
 interface Props { tools: any[]; }
 
+const LAST_URL_KEY = 'webpilot-last-url';
+const SCREENSHOT_HISTORY_KEY = 'webpilot-screenshot-history';
+const QUICK_SITES = [
+  { name: 'GitHub', url: 'https://github.com', icon: '🐙' },
+  { name: 'Google', url: 'https://www.google.com', icon: '🔍' },
+  { name: 'B站', url: 'https://www.bilibili.com', icon: '📺' },
+  { name: '掘金', url: 'https://juejin.cn', icon: '💎' },
+  { name: 'StackOverflow', url: 'https://stackoverflow.com', icon: '📚' },
+  { name: 'localhost', url: 'http://localhost:3000', icon: '🏠' },
+];
+
+function loadLastUrl(): string {
+  try { return localStorage.getItem(LAST_URL_KEY) || 'https://github.com'; } catch { return 'https://github.com'; }
+}
+function saveLastUrl(url: string) {
+  try { localStorage.setItem(LAST_URL_KEY, url); } catch {}
+}
+
+function loadScreenshotHistory(): Array<{ url: string; ts: number; label: string }> {
+  try { const r = localStorage.getItem(SCREENSHOT_HISTORY_KEY); return r ? JSON.parse(r) : []; } catch { return []; }
+}
+function saveScreenshotHistory(history: Array<{ url: string; ts: number; label: string }>) {
+  try { localStorage.setItem(SCREENSHOT_HISTORY_KEY, JSON.stringify(history.slice(0, 20))); } catch {}
+}
+
 export function BrowserPanel({ tools }: Props) {
-  const [url, setUrl] = useState('https://example.com');
+  const [url, setUrl] = useState(loadLastUrl);
   const [tabs, setTabs] = useState<{ user: any[]; agent: any[] }>({ user: [], agent: [] });
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
+  const [screenshotHistory, setScreenshotHistory] = useState<Array<{ url: string; ts: number; label: string }>>(loadScreenshotHistory);
   const [domSnapshot, setDomSnapshot] = useState<string>('');
   const [domOpen, setDomOpen] = useState(false);
   const [picking, setPicking] = useState(false);
   const [cookies, setCookies] = useState<any[]>([]);
   const [cookiesLoading, setCookiesLoading] = useState(false);
-  const [hoveredTab, setHoveredTab] = useState<string | null>(null);
-  const [selectedTab, setSelectedTab] = useState<any>(null);
   const [tabSearch, setTabSearch] = useState('');
   const [selectedTabs, setSelectedTabs] = useState<Set<string>>(new Set());
   const health = useAppStore((s) => s.health);
@@ -62,8 +86,9 @@ export function BrowserPanel({ tools }: Props) {
     return all[0]?.targetId || null;
   };
 
-  const navigate = async () => {
-    if (!url) return;
+  const navigate = async (navUrl?: string) => {
+    const targetUrl = navUrl || url;
+    if (!targetUrl) return;
     setBusy(true);
     try {
       let targetId = firstTargetId();
@@ -71,14 +96,13 @@ export function BrowserPanel({ tools }: Props) {
         pushToast({
           kind: 'warn',
           title: 'Chrome 未连接或没有 tab',
-          description: '在 PowerShell 跑 chrome --remote-debugging-port=9222 并打开一个网页',
+          description: '点右侧 🚀 按钮一键启动 Chrome，或手动: chrome --remote-debugging-port=9222',
         });
         return;
       }
       try {
-        await apiPost('/api/tools/call', { name: 'browser_navigate', args: { url, targetId } });
+        await apiPost('/api/tools/call', { name: 'browser_navigate', args: { url: targetUrl, targetId } });
       } catch (innerErr: any) {
-        // 如果 session 不存在（标签页关闭/刷新后 targetId 变了），刷新 tab 列表并重试
         if (innerErr.message?.includes('未找到 targetId 对应的 session') || innerErr.message?.includes('E_SESSION_NOT_FOUND')) {
           await refreshTabs();
           targetId = firstTargetId();
@@ -86,18 +110,42 @@ export function BrowserPanel({ tools }: Props) {
             pushToast({ kind: 'warn', title: '没有可用标签页', description: '请打开一个新网页后重试' });
             return;
           }
-          await apiPost('/api/tools/call', { name: 'browser_navigate', args: { url, targetId } });
+          await apiPost('/api/tools/call', { name: 'browser_navigate', args: { url: targetUrl, targetId } });
         } else {
           throw innerErr;
         }
       }
-      pushToast({ kind: 'success', title: '✓ 已跳转', description: url });
+      saveLastUrl(targetUrl);
+      setUrl(targetUrl);
+      pushToast({ kind: 'success', title: '✓ 已跳转', description: targetUrl });
     } catch (e: any) {
       pushToast({ kind: 'error', title: `跳转失败: ${e.message}` });
     } finally {
       setBusy(false);
     }
   };
+
+  const launchChrome = useCallback(() => {
+    const cmd = 'chrome --remote-debugging-port=9222';
+    navigator.clipboard.writeText(cmd).then(() => {
+      pushToast({ kind: 'info', title: '命令已复制到剪贴板', description: cmd, duration: 4000 });
+    });
+  }, []);
+
+  const addToScreenshotHistory = useCallback((dataUrl: string) => {
+    const label = new Date().toLocaleTimeString();
+    setScreenshotHistory(prev => {
+      const next = [{ url: dataUrl, ts: Date.now(), label }, ...prev].slice(0, 20);
+      saveScreenshotHistory(next);
+      return next;
+    });
+  }, []);
+
+  const clearScreenshotHistory = useCallback(() => {
+    setScreenshotHistory([]);
+    saveScreenshotHistory([]);
+    pushToast({ kind: 'info', title: '截图历史已清空' });
+  }, []);
 
   const callWithRetry = async (toolName: string, args: Record<string, any>): Promise<any> => {
     try {
@@ -127,6 +175,7 @@ export function BrowserPanel({ tools }: Props) {
       const dataUrl = typeof v === 'string' ? v : (v?.data ? `data:image/${v.format || 'png'};base64,${v.data}` : null);
       if (dataUrl) {
         setScreenshotUrl(dataUrl);
+        addToScreenshotHistory(dataUrl);
         pushToast({ kind: 'success', title: '✓ 截图已捕获' });
       } else {
         pushToast({ kind: 'info', title: '截图完成', description: '结果已返回, 但格式未识别' });
@@ -205,6 +254,33 @@ export function BrowserPanel({ tools }: Props) {
 
   return (
     <section className="mode-panel flex h-full flex-col gap-3 p-4">
+      {/* 快捷启动栏 */}
+      {!cdpOk && (
+        <div className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-2.5">
+          <Chrome className="h-4 w-4 text-amber-500" />
+          <span className="flex-1 text-xs text-amber-600 dark:text-amber-400">Chrome 调试端口未连接</span>
+          <Button size="sm" variant="outline" className="h-7 gap-1 border-amber-500/30 text-xs hover:bg-amber-500/10" onClick={launchChrome}>
+            <Play className="h-3 w-3" />复制启动命令
+          </Button>
+        </div>
+      )}
+
+      {/* 常用网站快捷入口 */}
+      <div className="flex flex-wrap gap-1">
+        {QUICK_SITES.map(site => (
+          <button
+            key={site.url}
+            onClick={() => { setUrl(site.url); navigate(site.url); }}
+            disabled={busy || !cdpOk}
+            className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground disabled:opacity-40"
+            title={site.url}
+          >
+            <span className="text-sm">{site.icon}</span>
+            {site.name}
+          </button>
+        ))}
+      </div>
+
       {/* URL bar */}
       <div className="flex gap-2">
         <div className="relative flex-1">
@@ -222,7 +298,6 @@ export function BrowserPanel({ tools }: Props) {
               !urlValid && url.length > 0 && "border-destructive focus-visible:ring-destructive"
             )}
           />
-          {/* URL 验证图标 */}
           {url.length > 0 && (
             <div className={cn(
               "pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-medium",
@@ -232,7 +307,7 @@ export function BrowserPanel({ tools }: Props) {
             </div>
           )}
         </div>
-        <Button size="sm" onClick={navigate} disabled={busy} className="gap-1.5">
+        <Button size="sm" onClick={() => navigate()} disabled={busy} className="gap-1.5">
           <ArrowRight className="h-3.5 w-3.5" />
           {busy ? '跳转中' : '跳转'}
         </Button>
@@ -262,14 +337,57 @@ export function BrowserPanel({ tools }: Props) {
         <TabsContent value="preview" className="flex-1 overflow-auto">
           {screenshotUrl ? (
             <div className="space-y-2 p-2">
-              <img src={screenshotUrl} alt="screenshot" className="w-full rounded border border-border" />
+              <div className="group relative">
+                <img src={screenshotUrl} alt="screenshot" className="w-full rounded border border-border" />
+                <div className="absolute right-2 top-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                  <Button size="sm" variant="secondary" className="h-7 gap-1 text-xs" onClick={() => {
+                    const a = document.createElement('a');
+                    a.href = screenshotUrl; a.download = `webpilot-screenshot-${Date.now()}.png`; a.click();
+                  }}>
+                    <Download className="h-3 w-3" />下载
+                  </Button>
+                  <Button size="sm" variant="secondary" className="h-7 gap-1 text-xs" onClick={() => {
+                    navigator.clipboard.writeText(screenshotUrl).catch(() => {});
+                    pushToast({ kind: 'success', title: '截图 base64 已复制' });
+                  }}>
+                    <Copy className="h-3 w-3" />复制
+                  </Button>
+                </div>
+              </div>
               <Button size="sm" variant="outline" onClick={() => setScreenshotUrl(null)}>清空</Button>
+              {/* 截图历史 */}
+              {screenshotHistory.length > 1 && (
+                <div className="mt-3">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-xs font-medium text-muted-foreground">
+                      <History className="mr-1 inline h-3 w-3" />截图历史 ({screenshotHistory.length})
+                    </span>
+                    <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px]" onClick={clearScreenshotHistory}>
+                      <Trash2 className="mr-1 h-2.5 w-2.5" />清空
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {screenshotHistory.slice(1, 9).map((s, i) => (
+                      <button
+                        key={s.ts}
+                        onClick={() => setScreenshotUrl(s.url)}
+                        className="group relative overflow-hidden rounded border border-border transition-colors hover:border-primary/50"
+                      >
+                        <img src={s.url} alt={`截图 ${i + 1}`} className="aspect-video w-full object-cover" />
+                        <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-1 py-0.5 text-[9px] text-white opacity-0 transition-opacity group-hover:opacity-100">
+                          {s.label}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <EmptyState
               icon={ImageIcon}
               title="浏览器实时预览"
-              description={cdpOk ? '点上方相机按钮截图查看当前页面' : 'Chrome 未连接 · 在 PowerShell 跑 chrome --remote-debugging-port=9222'}
+              description={cdpOk ? '点上方相机按钮截图查看当前页面' : 'Chrome 未连接 · 点击上方 🚀 按钮复制启动命令'}
               className="h-full"
             />
           )}
